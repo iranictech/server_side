@@ -69,3 +69,4 @@ All releases are listed on the [releases](https://github.com/openlibhums/janeway
 
 # Geolocation
 Janeway includes GeoLite2 data created by MaxMind, available from [https://www.maxmind.com](https://www.maxmind.com)
+#Server current
