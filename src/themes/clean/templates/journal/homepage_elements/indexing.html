@@ -1,0 +1,31 @@
+{% if indexings %}
+<section class="abstract-indexing-section" aria-labelledby="abstract-indexing-title">
+    <div class="abstract-indexing-header">
+        <h2 id="abstract-indexing-title">Abstracting &amp; Indexing</h2>
+    </div>
+
+    <div class="abstract-indexing-grid">
+        {% for indexing in indexings %}
+            <div class="abstract-indexing-card">
+                {% if indexing.url %}
+                    <a href="{{ indexing.url }}" target="_blank" rel="noopener noreferrer"
+                       class="abstract-indexing-link">
+                {% endif %}
+
+                {% if indexing.image %}
+                    <img src="{{ indexing.image.url }}"
+                         alt="{{ indexing.name }}"
+                         class="abstract-indexing-logo"
+                         loading="lazy">
+                {% endif %}
+
+                <span class="abstract-indexing-name">{{ indexing.name }}</span>
+
+                {% if indexing.url %}
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

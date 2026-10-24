@@ -276,6 +276,8 @@ def editor_or_journal_manager_required(func):
             return func(request, *args, **kwargs)
         deny_access(request)
 
+    return wrapper
+
 
 def editor_user_required(func):
     """This decorator checks that a user is an editor, or

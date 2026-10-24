@@ -111,6 +111,42 @@ def home(request):
     return render(request, template, context)
 
 
+@editor_user_required
+def journal_footer_settings(request):
+    if not request.journal or not (
+        request.user.is_staff
+        or request.user.is_journal_manager(request.journal)
+    ):
+        from django.http import Http404
+        raise Http404
+
+    form = forms.JournalFooterForm(
+        instance=request.journal,
+    )
+
+    if request.method == "POST":
+        form = forms.JournalFooterForm(
+            request.POST,
+            instance=request.journal,
+        )
+
+        if form.is_valid():
+            form.save()
+            messages.add_message(
+                request,
+                messages.INFO,
+                "Journal footer updated.",
+            )
+            return redirect("journal_footer_settings")
+
+    template = "admin/journal/footer.html"
+    context = {
+        "form": form,
+    }
+
+    return render(request, template, context)
+
+
 @has_journal
 def serve_journal_cover(request):
     """Serves the cover image for this journal or, if not affiliated with a journal, serves the press logo.
@@ -3032,3 +3068,25 @@ class PublishedArticlesListView(FacetedArticlesListView):
 @method_decorator(editor_user_required, name="dispatch")
 class JournalUsers(core_views.BaseUserList):
     pass
+
+
+
+def abstract_indexing_public_view(request):
+    """Public indexing page, available only when the plugin is enabled."""
+    from django.http import Http404
+    from core import plugin_loader
+
+    if getattr(request, "journal", None) is None:
+        raise Http404
+
+    if not plugin_loader.get_plugin("abstract_indexing", permissive=False):
+        raise Http404
+
+    try:
+        from plugins.abstract_indexing.views import indexing
+    except ModuleNotFoundError as exc:
+        if exc.name == "plugins.abstract_indexing.views":
+            raise Http404 from exc
+        raise
+
+    return indexing(request)

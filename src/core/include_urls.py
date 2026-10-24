@@ -148,6 +148,11 @@ urlpatterns = [
         name="core_edit_default_setting",
     ),
     re_path(
+        r"^manager/settings/footer/$",
+        journal_views.journal_footer_settings,
+        name="journal_footer_settings",
+    ),
+    re_path(
         r"^manager/settings/(?P<display_group>[-\w.]+)/$",
         core_views.edit_settings_group,
         name="core_edit_settings_group",

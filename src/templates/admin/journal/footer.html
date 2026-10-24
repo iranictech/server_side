@@ -1,0 +1,81 @@
+{% extends "admin/core/base.html" %}
+
+{% block title %}
+    Footer Settings
+{% endblock %}
+
+{% block body %}
+
+<div class="content">
+
+    <h2>Footer Settings</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.media }}
+
+        <div class="row">
+
+            <div class="small-12 columns">
+                <label>
+                    Footer - Brand
+                </label>
+
+                {{ form.footer_brand }}
+
+                {% if form.footer_brand.errors %}
+                    {{ form.footer_brand.errors }}
+                {% endif %}
+            </div>
+
+
+            <div class="small-12 columns">
+                <label>
+                    Footer - Useful Links
+                </label>
+
+                {{ form.footer_useful_links }}
+
+                {% if form.footer_useful_links.errors %}
+                    {{ form.footer_useful_links.errors }}
+                {% endif %}
+            </div>
+
+
+            <div class="small-12 columns">
+                <label>
+                    Footer - Guides &amp; Policies
+                </label>
+
+                {{ form.footer_guides }}
+
+                {% if form.footer_guides.errors %}
+                    {{ form.footer_guides.errors }}
+                {% endif %}
+            </div>
+
+
+            <div class="small-12 columns">
+                <label>
+                    Footer - Contact
+                </label>
+
+                {{ form.footer_contact }}
+
+                {% if form.footer_contact.errors %}
+                    {{ form.footer_contact.errors }}
+                {% endif %}
+            </div>
+
+        </div>
+
+        <button type="submit" class="button">
+            Save Footer
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

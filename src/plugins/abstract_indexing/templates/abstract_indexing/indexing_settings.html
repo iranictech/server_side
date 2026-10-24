@@ -1,0 +1,188 @@
+{% extends "admin/core/base.html" %}
+
+{% block title %}
+    Abstract Indexing
+{% endblock title %}
+
+{% block title-section %}
+    Abstract Indexing
+{% endblock title-section %}
+
+{% block title-sub %}
+    Settings
+{% endblock title-sub %}
+
+{% block body %}
+
+<div class="row expanded">
+    <div class="large-12 columns">
+        <div class="box">
+            <div class="title-area">
+                <h2>Homepage Integration</h2>
+            </div>
+
+            <div class="content">
+                {% if homepage_registered %}
+                    <p>
+                        Abstract Indexing is available in
+                        Homepage Elements for this journal.
+                    </p>
+                    <p>
+                        You can enable or disable it from
+                        the Homepage Elements settings.
+                    </p>
+                {% else %}
+                    <p>
+                        Register Abstract Indexing as an available
+                        homepage element for this journal.
+                    </p>
+
+                    <form
+                        method="post"
+                        action="{% url 'abstract_indexing_register_homepage' %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit" class="button success">
+                            Add to Homepage Elements
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row expanded">
+
+    <div class="large-12 columns">
+
+        <div class="box">
+
+            <div class="title-area">
+                <h2>
+                    Abstract Indexing
+                </h2>
+
+                <a
+                    href="{% url 'abstract_indexing_add' %}"
+                    class="success button"
+                >
+                    Add Abstract Indexing
+                </a>
+            </div>
+
+            <div class="content">
+
+                {% if indexings %}
+
+                    <table class="hover">
+
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>URL</th>
+                                <th>Ordering</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for indexing in indexings %}
+
+                                <tr>
+
+                                    <td>
+                                        {% if indexing.image %}
+                                            <img
+                                                src="{{ indexing.image.url }}"
+                                                alt="{{ indexing.name }}"
+                                                style="max-width:80px; max-height:50px;"
+                                            >
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ indexing.name }}
+                                    </td>
+
+                                    <td>
+                                        {% if indexing.url %}
+                                            <a
+                                                href="{{ indexing.url }}"
+                                                target="_blank"
+                                            >
+                                                {{ indexing.url }}
+                                            </a>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ indexing.ordering }}
+                                    </td>
+
+                                    <td>
+                                        {% if indexing.is_active %}
+                                            Yes
+                                        {% else %}
+                                            No
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+
+                                        <a
+                                            href="{% url 'abstract_indexing_edit' indexing.pk %}"
+                                            class="button tiny"
+                                        >
+                                            Edit
+                                        </a>
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'abstract_indexing_delete' indexing.pk %}"
+                                            style="display:inline;"
+                                        >
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="button tiny alert"
+                                                onclick="return confirm('Delete this indexing?');"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                {% else %}
+
+                    <p>
+                        No abstract indexing has been added yet.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock body %}
