@@ -114,10 +114,10 @@ def home(request):
 @editor_user_required
 def journal_footer_settings(request):
     if not request.journal or not (
-        request.user.is_staff
-        or request.user.is_journal_manager(request.journal)
+        request.user.is_staff or request.user.is_journal_manager(request.journal)
     ):
         from django.http import Http404
+
         raise Http404
 
     form = forms.JournalFooterForm(
@@ -3068,7 +3068,6 @@ class PublishedArticlesListView(FacetedArticlesListView):
 @method_decorator(editor_user_required, name="dispatch")
 class JournalUsers(core_views.BaseUserList):
     pass
-
 
 
 def abstract_indexing_public_view(request):

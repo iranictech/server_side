@@ -20,10 +20,7 @@ def update_role_permissions(request, slug):
     if not request.journal:
         raise PermissionDenied
 
-    if not (
-        request.user.is_staff
-        or request.user.is_journal_manager(request.journal)
-    ):
+    if not (request.user.is_staff or request.user.is_journal_manager(request.journal)):
         raise PermissionDenied
 
     role = get_object_or_404(models.Role, slug=slug)
@@ -32,14 +29,10 @@ def update_role_permissions(request, slug):
         raise PermissionDenied
 
     submitted_permissions = {
-        name: request.POST.get(name, "")
-        for name in MANAGED_PERMISSIONS
+        name: request.POST.get(name, "") for name in MANAGED_PERMISSIONS
     }
 
-    if any(
-        value not in ("", "on")
-        for value in submitted_permissions.values()
-    ):
+    if any(value not in ("", "on") for value in submitted_permissions.values()):
         raise PermissionDenied
 
     with transaction.atomic():
@@ -73,10 +66,7 @@ def update_role_permissions(request, slug):
 def get_role_permission_context(request, role):
     can_manage = (
         request.user.is_authenticated
-        and (
-            request.user.is_staff
-            or request.user.is_journal_manager(request.journal)
-        )
+        and (request.user.is_staff or request.user.is_journal_manager(request.journal))
         and role.slug == "editor-in-chief"
     )
 
@@ -95,11 +85,13 @@ def get_role_permission_context(request, role):
                 journal=request.journal,
             )
 
-            permissions.append({
-                "name": name,
-                "label": labels[name],
-                "enabled": role.slug in (setting.processed_value or []),
-            })
+            permissions.append(
+                {
+                    "name": name,
+                    "label": labels[name],
+                    "enabled": role.slug in (setting.processed_value or []),
+                }
+            )
 
     return {
         "can_manage_role_permissions": can_manage,
