@@ -15,6 +15,40 @@
 {% endblock %}
 
 {% block body %}
+
+{% if can_manage_role_permissions %}
+<div class="large-12 columns">
+    <div class="box">
+        <div class="title-area">
+            <h2>Role Permissions</h2>
+        </div>
+        <div class="content">
+            <p>Configure permissions for the {{ role.name }} role in this journal.</p>
+
+            <form method="post"
+                  action="{% url 'core_manager_role_permissions' role.slug %}">
+                {% csrf_token %}
+
+                {% for permission in role_permissions %}
+                <div style="margin-bottom: 15px;">
+                    <label>
+                        <input type="checkbox"
+                               name="{{ permission.name }}"
+                               {% if permission.enabled %}checked{% endif %}>
+                        <strong>{{ permission.label }}</strong>
+                    </label>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="button success">
+                    Save Permissions
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
     <div class="large-12 columns">
         <div class="box">
             <div class="title-area">
