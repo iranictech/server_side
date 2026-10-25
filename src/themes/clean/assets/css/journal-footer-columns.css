@@ -1,0 +1,63 @@
+/* Four-column journal footer — Clean theme */
+
+.site-footer .journal-footer-columns {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.site-footer .journal-footer-column {
+    margin-bottom: 1.5rem;
+    min-width: 0;
+}
+
+.site-footer .journal-footer-column h3 {
+    margin: 0 0 1rem;
+    color: #263238;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.site-footer .journal-footer-content {
+    color: #5e5e5e;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.site-footer .journal-footer-content p {
+    margin: 0 0 0.75rem;
+}
+
+.site-footer .journal-footer-content ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: none;
+}
+
+.site-footer .journal-footer-content li {
+    margin-bottom: 0.5rem;
+}
+
+.site-footer .journal-footer-content a {
+    color: #00688b;
+    text-decoration: none;
+}
+
+.site-footer .journal-footer-content a:hover,
+.site-footer .journal-footer-content a:focus {
+    text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+    .site-footer .journal-footer-columns {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .site-footer .journal-footer-column {
+        margin-bottom: 1.25rem;
+    }
+}

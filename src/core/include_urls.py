@@ -1,3 +1,5 @@
+from core import role_permissions
+
 __copyright__ = "Copyright 2017 Birkbeck, University of London"
 __author__ = "Martin Paul Eve & Andy Byers"
 __license__ = "AGPL v3"
@@ -23,6 +25,11 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 urlpatterns = [
+    re_path(
+        r"^manager/roles/(?P<slug>[-\w.]+)/permissions/$",
+        role_permissions.update_role_permissions,
+        name="core_manager_role_permissions",
+    ),
     path("", include(journal_urls)),
     path("api/", include("api.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
@@ -146,6 +153,11 @@ urlpatterns = [
         r"^manager/settings/group/(?P<setting_group>[-\w.: ]+)/default_setting/(?P<setting_name>[-\w.]+)/$",
         core_views.edit_setting,
         name="core_edit_default_setting",
+    ),
+    re_path(
+        r"^manager/settings/footer/$",
+        journal_views.journal_footer_settings,
+        name="journal_footer_settings",
     ),
     re_path(
         r"^manager/settings/(?P<display_group>[-\w.]+)/$",

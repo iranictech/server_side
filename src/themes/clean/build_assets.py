@@ -26,7 +26,7 @@ def copy_file(source, destination):
 
 def create_paths():
     base_path = os.path.join(settings.BASE_DIR, "static", "clean")
-    folders = ["css"]
+    folders = ["css", "js"]
 
     for folder in folders:
         os.makedirs(os.path.join(base_path, folder), exist_ok=True)
@@ -64,6 +64,14 @@ def build():
     copy_file(
         "themes/clean/assets/css/clean.css",
         "static/clean/css/clean.css",
+    )
+    copy_file(
+        "themes/clean/assets/css/journal-footer-columns.css",
+        "static/clean/css/journal-footer-columns.css",
+    )
+    copy_file(
+        "themes/clean/assets/css/abstract-indexing.css",
+        "static/clean/css/abstract-indexing.css",
     )
     copy_file(
         "themes/clean/assets/js/tooltip-init.js",

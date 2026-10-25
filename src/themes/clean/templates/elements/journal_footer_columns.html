@@ -1,0 +1,39 @@
+{% if request.journal.footer_brand or request.journal.footer_useful_links or request.journal.footer_guides or request.journal.footer_contact %}
+<div class="row journal-footer-columns">
+    {% if request.journal.footer_brand %}
+    <div class="col-12 col-md-6 col-lg-3 journal-footer-column">
+            <h3>About the Journal</h3>
+            <div class="journal-footer-content">
+                {{ request.journal.footer_brand|safe }}
+            </div>
+    </div>
+    {% endif %}
+
+    {% if request.journal.footer_useful_links %}
+    <div class="col-12 col-md-6 col-lg-3 journal-footer-column">
+            <h3>Useful Links</h3>
+            <div class="journal-footer-content">
+                {{ request.journal.footer_useful_links|safe }}
+            </div>
+    </div>
+    {% endif %}
+
+    {% if request.journal.footer_guides %}
+    <div class="col-12 col-md-6 col-lg-3 journal-footer-column">
+            <h3>Guides</h3>
+            <div class="journal-footer-content">
+                {{ request.journal.footer_guides|safe }}
+            </div>
+    </div>
+    {% endif %}
+
+    {% if request.journal.footer_contact %}
+    <div class="col-12 col-md-6 col-lg-3 journal-footer-column">
+            <h3>Contact</h3>
+            <div class="journal-footer-content">
+                {{ request.journal.footer_contact|safe }}
+            </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

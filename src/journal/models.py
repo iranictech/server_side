@@ -200,6 +200,41 @@ class Journal(AbstractSiteModel):
     contact_info = JanewayBleachField(
         null=True, blank=True, verbose_name="Contact Information"
     )
+    journal_footer_text = JanewayBleachField(
+        null=True,
+        blank=True,
+        verbose_name="Journal footer text",
+        help_text="Text that will appear in the footer of this journal.",
+    )
+
+    footer_brand = JanewayBleachField(
+        null=True,
+        blank=True,
+        verbose_name="Footer - Brand",
+        help_text="Content for the first footer column.",
+    )
+
+    footer_useful_links = JanewayBleachField(
+        null=True,
+        blank=True,
+        verbose_name="Footer - Useful Links",
+        help_text="Content for the second footer column.",
+    )
+
+    footer_guides = JanewayBleachField(
+        null=True,
+        blank=True,
+        verbose_name="Footer - Guides & Policies",
+        help_text="Content for the third footer column.",
+    )
+
+    footer_contact = JanewayBleachField(
+        null=True,
+        blank=True,
+        verbose_name="Footer - Contact",
+        help_text="Content for the fourth footer column.",
+    )
+
     keywords = models.ManyToManyField(
         "submission.Keyword",
         blank=True,

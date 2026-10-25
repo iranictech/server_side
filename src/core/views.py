@@ -1457,7 +1457,13 @@ def role(request, slug):
         )
 
     template = "core/manager/roles/role.html"
-    context = {"role": role_obj, "account_roles": account_roles}
+    from core.role_permissions import get_role_permission_context
+
+    context = {
+        "role": role_obj,
+        "account_roles": account_roles,
+        **get_role_permission_context(request, role_obj),
+    }
 
     return render(request, template, context)
 

@@ -15,6 +15,11 @@ NON_DOI_PIPE_SEPARATED_IDENTIFIERS = "|".join(NON_DOI_IDENTIFIER_TYPES)
 # Regex pattern an example is this is 'article_view'
 
 urlpatterns = [
+    re_path(
+        r"^indexing/$",
+        views.abstract_indexing_public_view,
+        name="journal_indexing",
+    ),
     # Figures and download patterns
     re_path(
         r"^article/(?P<identifier_type>{0})/(?P<identifier>[\w.-]+)/print/$"

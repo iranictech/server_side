@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Abstracting & Indexing" %}{% endblock title %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        {% if indexings %}
+            {% include "journal/homepage_elements/indexing.html" %}
+        {% else %}
+            <section class="abstract-indexing-section">
+                <h1>{% trans "Abstracting & Indexing" %}</h1>
+                <p>{% trans "No indexing services are currently listed for this journal." %}</p>
+            </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock body %}
