@@ -52,7 +52,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 
 INSTALLED_APPS = [
     "modeltranslation",
-    'django.contrib.sites',
+    "django.contrib.sites",
     "apps.JanewayAdminConfig",
     "django.contrib.auth",
     "django.contrib.sessions",

@@ -7,7 +7,6 @@ from uuid import uuid4
 import threading
 
 
-
 import pytz
 
 from django.http import Http404
@@ -101,9 +100,7 @@ class ActiveRoleMiddleware(BaseMiddleware):
         if not roles:
             return None
 
-        active_roles = request.session.get(
-            ActiveRoleMiddleware.SESSION_KEY, {}
-        )
+        active_roles = request.session.get(ActiveRoleMiddleware.SESSION_KEY, {})
 
         if not isinstance(active_roles, dict):
             active_roles = {}
@@ -112,25 +109,18 @@ class ActiveRoleMiddleware(BaseMiddleware):
         selected_slug = active_roles.get(journal_key)
 
         role_by_slug = {
-            account_role.role.slug: account_role.role
-            for account_role in roles
+            account_role.role.slug: account_role.role for account_role in roles
         }
 
         if selected_slug not in role_by_slug:
             selected_slug = roles[0].role.slug
             active_roles[journal_key] = selected_slug
-            request.session[
-                ActiveRoleMiddleware.SESSION_KEY
-            ] = active_roles
+            request.session[ActiveRoleMiddleware.SESSION_KEY] = active_roles
 
         request.active_role_slug = selected_slug
         request.active_role = role_by_slug[selected_slug]
 
         return None
-
-
-
-
 
 
 class SiteSettingsMiddleware(BaseMiddleware):

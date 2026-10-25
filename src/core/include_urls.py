@@ -1,4 +1,5 @@
 from core import role_permissions
+
 __copyright__ = "Copyright 2017 Birkbeck, University of London"
 __author__ = "Martin Paul Eve & Andy Byers"
 __license__ = "AGPL v3"
@@ -29,7 +30,6 @@ urlpatterns = [
         role_permissions.update_role_permissions,
         name="core_manager_role_permissions",
     ),
-
     path("", include(journal_urls)),
     path("api/", include("api.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
@@ -184,8 +184,6 @@ urlpatterns = [
         core_views.role_action,
         name="core_manager_role_action",
     ),
-
-
     re_path(
         r"^role/(?P<role_slug>[-\w]+)/switch/$",
         core_views.switch_active_role,

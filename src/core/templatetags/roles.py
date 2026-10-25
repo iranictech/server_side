@@ -8,7 +8,6 @@ register = template.Library()
 
 @register.simple_tag()
 def user_has_role(request, role, staff_override=True):
-
     if not request.user.is_authenticated:
         return None
 

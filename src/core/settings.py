@@ -4,8 +4,8 @@ SITE_ID = 1
 SECRET_KEY = "uxprsdhk^gzd-r=_287byolxn)$k6tsd8_cepl^s^tms2w1qrv"
 
 # This is the default redirect if no other sites are found.
-#DEFAULT_HOST = "https://www.example.org"
-#DEFAULT_HOST = "iranictech.ir"
+# DEFAULT_HOST = "https://www.example.org"
+# DEFAULT_HOST = "iranictech.ir"
 DEFAULT_HOST = "https://iranictech.ir"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 LOGIN_REDIRECT_URL = "/user/profile/"
@@ -34,7 +34,7 @@ ORCID_CLIENT_ID = "APP-9PQY9J127G4LOQYJ"
 # Default Langague
 LANGUAGE_CODE = "en"
 
-#URL_CONFIG = "path"  # path or domain
+# URL_CONFIG = "path"  # path or domain
 URL_CONFIG = "domain"
 DATABASES = {
     "default": {
@@ -48,7 +48,6 @@ DATABASES = {
         "PASSWORD": "ramsar227",
         "HOST": "localhost",
         "PORT": "5432",
-        
     }
 }
 
@@ -70,15 +69,15 @@ ENABLE_FULL_TEXT_SEARCH = False  # Read the docs before enabling full text
 # Model used for indexing full text files
 CORE_FILETEXT_MODEL = "core.FileText"  # Use "core.PGFileText" for Postgres
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT =  False
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = False
 USE_X_FORWARDED_HOST = True
 
 # Production Settings
-#DEBUG = False
+# DEBUG = False
 DEBUG = False
-#ALLOWED_HOSTS = ['65.109.220.223', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://iranictech.ir', 'https://www.iranictech.ir']
+# ALLOWED_HOSTS = ['65.109.220.223', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ["https://iranictech.ir", "https://www.iranictech.ir"]
 ALLOWED_HOSTS = [
     "iranictech.ir",
     "www.iranictech.ir",

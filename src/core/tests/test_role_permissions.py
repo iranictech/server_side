@@ -15,7 +15,6 @@ from utils.testing import helpers
 
 
 class RolePermissionsTests(TestCase):
-
     @classmethod
     def setUpTestData(cls):
         helpers.create_press()
@@ -41,9 +40,7 @@ class RolePermissionsTests(TestCase):
             "regular-permissions@example.com",
         )
 
-        group, _ = models.SettingGroup.objects.get_or_create(
-            name="permission"
-        )
+        group, _ = models.SettingGroup.objects.get_or_create(name="permission")
 
         for name in ("sections", "licenses"):
             setting, _ = models.Setting.objects.get_or_create(
@@ -54,9 +51,7 @@ class RolePermissionsTests(TestCase):
             models.SettingValue.objects.update_or_create(
                 setting=setting,
                 journal=None,
-                defaults={
-                    "value": '["editor", "journal-manager"]'
-                },
+                defaults={"value": '["editor", "journal-manager"]'},
             )
 
     def setUp(self):
@@ -74,30 +69,18 @@ class RolePermissionsTests(TestCase):
         return request
 
     def test_editor_cannot_update_permissions(self):
-        request = self.make_request(
-            self.editor, {"sections": "on"}
-        )
+        request = self.make_request(self.editor, {"sections": "on"})
         with self.assertRaises(PermissionDenied):
-            update_role_permissions(
-                request, slug="editor-in-chief"
-            )
+            update_role_permissions(request, slug="editor-in-chief")
 
     def test_regular_user_cannot_update_permissions(self):
-        request = self.make_request(
-            self.regular, {"sections": "on"}
-        )
+        request = self.make_request(self.regular, {"sections": "on"})
         with self.assertRaises(PermissionDenied):
-            update_role_permissions(
-                request, slug="editor-in-chief"
-            )
+            update_role_permissions(request, slug="editor-in-chief")
 
     def test_get_request_is_rejected(self):
-        request = self.make_request(
-            self.manager, method="get"
-        )
-        response = update_role_permissions(
-            request, slug="editor-in-chief"
-        )
+        request = self.make_request(self.manager, method="get")
+        response = update_role_permissions(request, slug="editor-in-chief")
         self.assertEqual(response.status_code, 405)
 
     @patch("core.role_permissions.messages.success")
@@ -107,9 +90,7 @@ class RolePermissionsTests(TestCase):
             {"sections": "on", "licenses": "on"},
         )
 
-        response = update_role_permissions(
-            request, slug="editor-in-chief"
-        )
+        response = update_role_permissions(request, slug="editor-in-chief")
 
         self.assertEqual(response.status_code, 302)
 
@@ -117,13 +98,9 @@ class RolePermissionsTests(TestCase):
             "permission", "sections", self.journal_one
         )
 
-        self.assertIn(
-            "editor-in-chief", setting.processed_value
-        )
+        self.assertIn("editor-in-chief", setting.processed_value)
         self.assertIn("editor", setting.processed_value)
-        self.assertIn(
-            "journal-manager", setting.processed_value
-        )
+        self.assertIn("journal-manager", setting.processed_value)
 
     @patch("core.role_permissions.messages.success")
     def test_journal_isolation(self, _message):
@@ -132,23 +109,13 @@ class RolePermissionsTests(TestCase):
             {"sections": "on"},
         )
 
-        update_role_permissions(
-            request, slug="editor-in-chief"
-        )
+        update_role_permissions(request, slug="editor-in-chief")
 
-        first = setting_handler.get_setting(
-            "permission", "sections", self.journal_one
-        )
-        second = setting_handler.get_setting(
-            "permission", "sections", self.journal_two
-        )
+        first = setting_handler.get_setting("permission", "sections", self.journal_one)
+        second = setting_handler.get_setting("permission", "sections", self.journal_two)
 
-        self.assertIn(
-            "editor-in-chief", first.processed_value
-        )
-        self.assertNotIn(
-            "editor-in-chief", second.processed_value
-        )
+        self.assertIn("editor-in-chief", first.processed_value)
+        self.assertNotIn("editor-in-chief", second.processed_value)
 
     def test_invalid_input_does_not_save(self):
         request = self.make_request(
@@ -157,9 +124,7 @@ class RolePermissionsTests(TestCase):
         )
 
         with self.assertRaises(PermissionDenied):
-            update_role_permissions(
-                request, slug="editor-in-chief"
-            )
+            update_role_permissions(request, slug="editor-in-chief")
 
         self.assertFalse(
             models.SettingValue.objects.filter(
@@ -177,9 +142,7 @@ class RolePermissionsTests(TestCase):
         )
 
         with self.assertRaises(PermissionDenied):
-            update_role_permissions(
-                request, slug="editor-in-chief"
-            )
+            update_role_permissions(request, slug="editor-in-chief")
 
         self.assertFalse(
             models.SettingValue.objects.filter(
@@ -196,9 +159,7 @@ class RolePermissionsTests(TestCase):
         )
 
         with self.assertRaises(PermissionDenied):
-            update_role_permissions(
-                request, slug="editor"
-            )
+            update_role_permissions(request, slug="editor")
 
         self.assertFalse(
             models.SettingValue.objects.filter(
@@ -218,30 +179,18 @@ class RolePermissionsTests(TestCase):
             {"sections": "on", "licenses": "on"},
         )
 
-        response = update_role_permissions(
-            request, slug="editor-in-chief"
-        )
+        response = update_role_permissions(request, slug="editor-in-chief")
 
         self.assertEqual(response.status_code, 302)
 
         for name in ("sections", "licenses"):
-            setting = setting_handler.get_setting(
-                "permission", name, self.journal_one
-            )
-            self.assertIn(
-                "editor-in-chief", setting.processed_value
-            )
+            setting = setting_handler.get_setting("permission", name, self.journal_one)
+            self.assertIn("editor-in-chief", setting.processed_value)
 
     def test_editor_cannot_manage_context(self):
-        role = models.Role.objects.get(
-            slug="editor-in-chief"
-        )
+        role = models.Role.objects.get(slug="editor-in-chief")
         request = self.make_request(self.editor)
 
-        context = get_role_permission_context(
-            request, role
-        )
+        context = get_role_permission_context(request, role)
 
-        self.assertFalse(
-            context["can_manage_role_permissions"]
-        )
+        self.assertFalse(context["can_manage_role_permissions"])
