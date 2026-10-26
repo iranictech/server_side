@@ -20,6 +20,26 @@ jobs:
     steps:
       - name: Checkout the codebase
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.SUBMISSION_PROOF_SSH_KEY }}
+          persist-credentials: false
+
+      - name: Prepare submission_proof plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PLUGIN_DIR="src/plugins/submission_proof"
+          SOURCE_DIR="$PLUGIN_DIR/src/plugins/submission_proof"
+
+          test -f "$SOURCE_DIR/plugin_settings.py"
+
+          cp -a "$SOURCE_DIR/." "$PLUGIN_DIR/"
+
+          test -f "$PLUGIN_DIR/plugin_settings.py"
+
+          echo "SUBMISSION_PROOF_PLUGIN_READY"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
