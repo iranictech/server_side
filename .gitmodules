@@ -1,0 +1,3 @@
+[submodule "src/plugins/submission_proof"]
+	path = src/plugins/submission_proof
+	url = git@github.com:Nadia1gh/janeway-author-submission-proof.git
