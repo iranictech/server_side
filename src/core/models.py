@@ -786,6 +786,15 @@ class Account(AbstractBaseUser, PermissionsMixin):
             role__slug="journal-manager",
         ).exists()
 
+    def is_repository_manager(self, repository):
+        """
+        Check whether this account manages the given repository.
+        """
+        if repository is None:
+            return False
+
+        return repository.managers.filter(pk=self.pk).exists()
+
     def has_active_role(self, request, role, staff_override=True):
         """
         Check whether the user is operating under the requested active role.
