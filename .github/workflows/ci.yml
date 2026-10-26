@@ -30,7 +30,6 @@ jobs:
           repository: Nadia1gh/janeway-author-submission-proof
           ref: 8092a0c4ab274a15b0f7c7a4e84338ab6f437496
           path: src/plugins/submission_proof
-          ssh-key: ${{ secrets.SUBMISSION_PROOF_SSH_KEY }}
           persist-credentials: false
 
       - name: Prepare submission_proof plugin
