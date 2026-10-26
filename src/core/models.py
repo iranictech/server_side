@@ -786,7 +786,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
             role__slug="journal-manager",
         ).exists()
 
-
     def has_active_role(self, request, role, staff_override=True):
         """
         Check whether the user is operating under the requested active role.
@@ -812,49 +811,38 @@ class Account(AbstractBaseUser, PermissionsMixin):
             staff_override=staff_override,
         )
 
-
     def is_editor(self, request, journal=None):
         if journal is not None:
             return self.check_role(journal, "editor")
 
         return self.has_active_role(request, "editor")
 
-
     def is_section_editor(self, request):
         return self.has_active_role(request, "section-editor")
-
 
     def has_an_editor_role(self, request):
         return self.is_editor(request) or self.is_section_editor(request)
 
-
     def is_reviewer(self, request):
         return self.has_active_role(request, "reviewer")
-
 
     def is_author(self, request):
         return self.has_active_role(request, "author")
 
-
     def is_proofreader(self, request):
         return self.has_active_role(request, "proofreader")
-
 
     def is_production(self, request):
         return self.has_active_role(request, "production")
 
-
     def is_copyeditor(self, request):
         return self.has_active_role(request, "copyeditor")
-
 
     def is_typesetter(self, request):
         return self.has_active_role(request, "typesetter")
 
-
     def is_proofing_manager(self, request):
         return self.has_active_role(request, "proofing-manager")
-
 
     def is_reader(self, request):
         return self.has_active_role(
@@ -862,7 +850,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
             "reader",
             staff_override=False,
         )
-
 
     def is_preprint_editor(self, request):
         if self in request.press.preprint_editors():
