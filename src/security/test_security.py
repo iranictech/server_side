@@ -4147,7 +4147,7 @@ class TestSecurity(TestCase):
             setting_group_name="general",
             setting_name="limit_access_to_submission",
             journal=self.journal_one,
-            value="On",
+            value="on",
         )
 
         request = self.prepare_request_with_user(
@@ -4173,7 +4173,7 @@ class TestSecurity(TestCase):
             setting_group_name="general",
             setting_name="limit_access_to_submission",
             journal=self.journal_one,
-            value="On",
+            value="on",
         )
 
         request = self.prepare_request_with_user(

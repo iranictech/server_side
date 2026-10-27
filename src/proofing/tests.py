@@ -121,8 +121,19 @@ class TestLogic(TestCase):
             200,
         )
 
+    def test_proofing_correction_requests_denies_inactive_typesetter_role(self):
+        """A multi-role user cannot use typesetter access while acting as editor."""
+        self.client.force_login(self.typesetter)
+        response = self.client.get(reverse("proofing_correction_requests"))
+        self.assertEqual(response.status_code, 403)
+
     def test_archive_stage_hides_correction_task(self):
         self.client.force_login(self.typesetter)
+        session = self.client.session
+        active_roles = session.get("janeway_active_roles", {})
+        active_roles[str(self.journal_one.pk)] = "typesetter"
+        session["janeway_active_roles"] = active_roles
+        session.save()
         response = self.client.get(reverse("proofing_correction_requests"))
         self.assertContains(
             response,

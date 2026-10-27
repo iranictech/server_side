@@ -33,6 +33,15 @@ class ReviewTests(TestCase):
     def setUp(self):
         self.files = list()
 
+    def _login_as_editor(self):
+        """Select Editor explicitly for this multi-role test account."""
+        self.client.force_login(self.editor)
+        session = self.client.session
+        active_roles = session.get("janeway_active_roles", {})
+        active_roles[str(self.journal_one.pk)] = "editor"
+        session["janeway_active_roles"] = active_roles
+        session.save()
+
     @override_settings(URL_CONFIG="domain")
     def test_index_view_with_no_questions(self):
         """
@@ -303,7 +312,7 @@ class ReviewTests(TestCase):
         assignment.decision = None
         assignment.save()
 
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         decline_url = reverse(
             "review_decision", kwargs={"article_id": article1.pk, "decision": "decline"}
         )
@@ -368,7 +377,7 @@ class ReviewTests(TestCase):
             setting_group_name="general",
             setting_name="display_completed_reviews_in_additional_rounds",
             journal=self.journal_one,
-            value="On",
+            value="on",
         )
         clear_cache()
 
@@ -462,7 +471,7 @@ class ReviewTests(TestCase):
             setting_group_name="general",
             setting_name="display_completed_reviews_in_additional_rounds",
             journal=self.journal_one,
-            value="On",
+            value="on",
         )
         clear_cache()
         download_url = reverse(
@@ -1098,7 +1107,25 @@ class ReviewTests(TestCase):
 
     def test_assignment_notification_get(self):
         self._make_editor_assignment()
+        self._login_as_editor()
+        response = self.client.get(
+            self._assignment_notification_url(),
+            SERVER_NAME=self.journal_one.domain,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_assignment_notification_denied_when_author_role_is_active(self):
+        """Assigned Editor must not receive Editor access while acting as Author."""
+        self._make_editor_assignment()
         self.client.force_login(self.editor)
+        response = self.client.get(
+            self._assignment_notification_url(),
+            SERVER_NAME=self.journal_one.domain,
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Selecting Editor explicitly allows the same user's request.
+        self._login_as_editor()
         response = self.client.get(
             self._assignment_notification_url(),
             SERVER_NAME=self.journal_one.domain,
@@ -1108,7 +1135,7 @@ class ReviewTests(TestCase):
     def test_assignment_notification_post_sends(self):
         """A valid POST redirects and marks the assignment as notified."""
         assignment = self._make_editor_assignment()
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         response = self.client.post(
             self._assignment_notification_url(),
             {
@@ -1127,7 +1154,7 @@ class ReviewTests(TestCase):
     def test_assignment_notification_skip_redirects_and_notifies(self):
         """Clicking Skip redirects and marks the assignment as notified without sending email."""
         assignment = self._make_editor_assignment()
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         response = self.client.post(
             self._assignment_notification_url(),
             {
@@ -1147,7 +1174,7 @@ class ReviewTests(TestCase):
     def test_assignment_notification_send_delivers_email(self):
         """Submitting the form sends an email to the assigned editor."""
         self._make_editor_assignment()
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         self.client.post(
             self._assignment_notification_url(),
             {
@@ -1164,7 +1191,7 @@ class ReviewTests(TestCase):
 
     def test_notify_reviewer_post_redirects(self):
         """A valid POST redirects when one-click access is off (no URL check)."""
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         with janeway_setting_override(
             "general", "enable_one_click_access", self.journal_one, ""
         ):
@@ -1189,7 +1216,7 @@ class ReviewTests(TestCase):
 
     def test_notify_reviewer_skip_redirects_without_email(self):
         """Skip bypasses URL validation and redirects without sending an email."""
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         response = self.client.post(
             reverse(
                 "review_notify_reviewer",
@@ -1212,7 +1239,7 @@ class ReviewTests(TestCase):
 
     def test_notify_reviewer_with_correct_url_redirects(self):
         """A POST containing the correct reviewer URL redirects when one-click access is on."""
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         review_url = self.journal_one.site_url(
             path=reverse(
                 "do_review", kwargs={"assignment_id": self.review_assignment.pk}
@@ -1245,7 +1272,7 @@ class ReviewTests(TestCase):
 
     def test_notify_reviewer_missing_url_does_not_redirect(self):
         """A POST without the reviewer URL and without skip stays on the page."""
-        self.client.force_login(self.editor)
+        self._login_as_editor()
         with janeway_setting_override(
             "general", "enable_one_click_access", self.journal_one, "on"
         ):
