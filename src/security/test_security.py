@@ -3691,7 +3691,7 @@ class TestSecurity(TestCase):
             "permission",
             "se_pii_filter",
             self.journal_one,
-            True,
+            "on",
         ):
             decorated_func = decorators.editor_user_required_and_can_see_pii(func)
             kwargs = {"article_id": self.article_in_review.pk}
@@ -4672,7 +4672,7 @@ class TestSecurity(TestCase):
             "permission",
             "se_pii_filter",
             self.article_in_review.journal,
-            True,
+            "on",
         ):
             self.client.force_login(self.section_editor)
             article_views = [
