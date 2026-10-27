@@ -1,0 +1,30 @@
+{% load i18n %}
+{% comment %}
+Only memberships on the current journal appear here. Changing roles uses
+the existing POST-only view, which revalidates membership on the server.
+{% endcomment %}
+{% if request.journal and request.journal_roles|length > 1 %}
+<details class="active-role-switcher">
+    <summary class="active-role-switcher__trigger" aria-label="{% trans 'Active role' %}: {{ request.active_role.name }}">
+        <span class="active-role-switcher__caption">{% trans "Role" %}</span>
+        <span class="active-role-switcher__name">{{ request.active_role.name }}</span>
+        <i class="fa fa-chevron-down" aria-hidden="true"></i>
+    </summary>
+    <div class="active-role-switcher__menu" role="group" aria-label="{% trans 'Choose active role' %}">
+        {% for account_role in request.journal_roles %}
+        <form method="post" action="{% url 'core_switch_active_role' account_role.role.slug %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'core_dashboard' %}">
+            <button type="submit"
+                class="active-role-switcher__option{% if request.active_role_slug == account_role.role.slug %} active-role-switcher__option--selected{% endif %}"
+                {% if request.active_role_slug == account_role.role.slug %}aria-current="true"{% endif %}>
+                <span>{{ account_role.role.name }}</span>
+                {% if request.active_role_slug == account_role.role.slug %}
+                <i class="fa fa-check" aria-hidden="true"></i>
+                {% endif %}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+</details>
+{% endif %}
