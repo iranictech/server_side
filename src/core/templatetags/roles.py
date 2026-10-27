@@ -18,11 +18,8 @@ def user_has_role(request, role, staff_override=True):
         if staff_override and request.user.is_staff:
             return True
 
-        return (
-            active_role_slug == role
-            and request.user.has_active_role(
-                request, role, staff_override=False
-            )
+        return active_role_slug == role and request.user.has_active_role(
+            request, role, staff_override=False
         )
 
     return request.user.check_role(
