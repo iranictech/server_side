@@ -13,18 +13,8 @@ def can_edit_file(request, user, file_object, article):
         return False
 
     # a general set of conditions that allow file editing
-    if user.is_staff or user.is_editor(request) or (
-        file_object.owner == user
-        and (
-            user.is_author(request)
-            or user.is_reviewer(request)
-            or user.is_copyeditor(request)
-            or user.is_proofreader(request)
-            or user.is_typesetter(request)
-            or user.is_production(request)
-            or user.is_proofing_manager(request)
-        )
-    ):
+    # Ownership is an independent object-level grant, not an inactive role.
+    if user.is_staff or user.is_editor(request) or file_object.owner == user:
         return True
 
     # allow section editors to edit files of articles assigned to them
@@ -98,18 +88,8 @@ def can_view_file(request, user, file_object=None):
     if user.is_anonymous:
         return False
 
-    if user.is_staff or user.is_editor(request) or (
-        file_object.owner == user
-        and (
-            user.is_author(request)
-            or user.is_reviewer(request)
-            or user.is_copyeditor(request)
-            or user.is_proofreader(request)
-            or user.is_typesetter(request)
-            or user.is_production(request)
-            or user.is_proofing_manager(request)
-        )
-    ):
+    # Ownership is an independent object-level grant, not an inactive role.
+    if user.is_staff or user.is_editor(request) or file_object.owner == user:
         return True
 
     # allow section editors to view files of articles assigned to them
