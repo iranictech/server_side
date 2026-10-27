@@ -158,7 +158,6 @@ def get_requestless_setting(setting_group, setting, journal):
         journal,
     )
 
-
 def save_setting(setting_group_name, setting_name, journal, value):
     try:
         setting = core_models.Setting.objects.get(
@@ -194,7 +193,6 @@ def save_setting(setting_group_name, setting_name, journal, value):
             setting_value.save()
 
     return setting_value
-
 
 def save_plugin_setting(plugin, setting_name, value, journal):
     plugin_group_name = "plugin:{plugin_name}".format(plugin_name=plugin.name)
