@@ -1250,7 +1250,7 @@ class OrganizationListView(GenericFacetedListView):
             pk=int(self.kwargs.get("author_id")),
             article=article,
         )
-        if not author.can_edit(self.request.user):
+        if not author.can_edit(self.request.user, request=self.request):
             raise Http404
         context["article"] = article
         context["author"] = author
