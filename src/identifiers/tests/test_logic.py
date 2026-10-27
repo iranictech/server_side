@@ -34,7 +34,7 @@ class TestLogic(TestCase):
         for journal in [cls.journal_one, cls.journal_two]:
             save_setting("general", "journal_issn", journal, "1234-5678")
             save_setting("general", "print_issn", journal, "8765-4321")
-            save_setting("Identifiers", "use_crossref", journal, True)
+            save_setting("Identifiers", "use_crossref", journal, "on")
             save_setting("Identifiers", "crossref_prefix", journal, "10.0000")
             save_setting(
                 "Identifiers", "crossref_email", journal, "sample_email@example.com"
@@ -288,7 +288,7 @@ class TestLogic(TestCase):
 
     def test_preview_registration_information_when_use_crossref_on(self):
         clear_cache()
-        save_setting("Identifiers", "use_crossref", self.journal_one, True)
+        save_setting("Identifiers", "use_crossref", self.journal_one, "on")
         self.assertTrue(
             "Current metadata to send to Crossref"
             in self.article_one.registration_preview
@@ -509,7 +509,7 @@ class TestReviewDoiMinting(TestCase):
 
         save_setting("general", "journal_issn", cls.journal, "0000-0001")
         save_setting("general", "print_issn", cls.journal, "0000-0002")
-        save_setting("Identifiers", "use_crossref", cls.journal, True)
+        save_setting("Identifiers", "use_crossref", cls.journal, "on")
         save_setting("Identifiers", "crossref_prefix", cls.journal, "10.9999")
         save_setting("Identifiers", "crossref_email", cls.journal, "test@example.com")
         save_setting("Identifiers", "crossref_name", cls.journal, "Test Depositor")
