@@ -47,3 +47,12 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
           python src/manage.py test core.tests.test_active_role_authorization security.test_security.TestSecurity.test_section_editor_cant_access_view_because_of_pii security.test_security.TestSecurity.test_section_editor_cannot_see_pii_when_enabled --noinput
+      - name: Full Django regression suite
+        continue-on-error: true
+        env:
+          DB_VENDOR: sqlite
+          DB_NAME: ":memory:"
+          JANEWAY_SETTINGS_MODULE: core.janeway_global_settings
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python src/manage.py test --noinput
