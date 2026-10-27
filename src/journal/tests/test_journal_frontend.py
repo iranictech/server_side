@@ -200,7 +200,7 @@ class TestJournalSite(TestCase):
             "general",
             "keyword_list_page",
             self.journal,
-            value=True,
+            value="on",
         )
         response = self.client.get(
             reverse(
