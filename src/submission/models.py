@@ -1985,29 +1985,31 @@ class Article(AbstractLastModifiedModel):
             return separator.join(kw.word for kw in self.keywords.all())
         return ""
 
-    def can_edit(self, user):
+    def can_edit(self, user, request=None):
         """
-        Determines whether a user can edit the article.
-        They can if:
-          - they are staff of the press, or
-          - they are a section editor on the article's section, or
-          - they are an editor of the journal, or
-          - they are the owner and the article is unsubmitted.
+        Check article edit permission. In a web request the selected journal
+        role must authorise editing; without a request retain the historical
+        membership-based behaviour for background operations.
         """
-
         if user.is_staff:
             return True
-        elif user in self.section_editors():
-            return True
-        elif not user.is_anonymous and user.is_editor(
-            request=None,
-            journal=self.journal,
+        if request is not None and request.journal != self.journal:
+            return False
+        if user in self.section_editors() and (
+            request is None or user.is_section_editor(request)
         ):
             return True
-        elif self.owner == user and self.is_unsubmitted():
+        if not user.is_anonymous:
+            if request is not None:
+                if user.is_editor(request):
+                    return True
+            elif user.is_editor(request=None, journal=self.journal):
+                return True
+        if self.owner == user and self.is_unsubmitted() and (
+            request is None or user.is_author(request)
+        ):
             return True
-        else:
-            return False
+        return False
 
     def current_review_round(self):
         try:
@@ -2721,33 +2723,32 @@ class FrozenAuthor(AbstractLastModifiedModel):
         else:
             return None
 
-    def can_edit(self, user):
+    def can_edit(self, user, request=None):
         """
-        Determines whether a user can edit the author record.
-        They can if:
-          - they are staff of the press, or
-          - they are a section editor on the article's section, or
-          - they are an editor of the journal, or
-          - they are the author and the article is unsubmitted, or
-          - they are the owner of the article,
-            the author record has no associated account,
-            and the article is unsubmitted.
+        Check author-record edit permission, respecting the active journal
+        role when a request is available.
         """
-
         if user.is_staff:
             return True
-        elif self.article:
-            if user in self.article.section_editors():
+        if not self.article:
+            return False
+        if request is not None and request.journal != self.article.journal:
+            return False
+        if user in self.article.section_editors() and (
+            request is None or user.is_section_editor(request)
+        ):
+            return True
+        if not user.is_anonymous:
+            if request is not None:
+                if user.is_editor(request):
+                    return True
+            elif user.is_editor(request=None, journal=self.article.journal):
                 return True
-            elif not user.is_anonymous and user.is_editor(
-                request=None,
-                journal=self.article.journal,
-            ):
-                return True
-            elif self.owner == user and self.article.is_unsubmitted():
-                # FrozenAuthor.owner is a property that considers both
-                # FrozenAuthor.author and FrozenAuthor.article.owner.
-                return True
+        if self.owner == user and self.article.is_unsubmitted() and (
+            request is None or user.is_author(request)
+        ):
+            # FrozenAuthor.owner can be the linked author or article owner.
+            return True
         return False
 
     def associate_with_account(self):
