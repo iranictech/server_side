@@ -1,5 +1,8 @@
 """Regression tests for journal-scoped active-role authorization."""
 
+from types import SimpleNamespace
+from unittest.mock import patch
+
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
@@ -149,3 +152,38 @@ class TestActiveRoleAuthorization(TestCase):
             self.client.session["janeway_active_roles"][str(self.journal.pk)],
             "editor",
         )
+
+    def test_role_setting_rejects_unassigned_active_role(self):
+        guarded = decorators.role_can_access("some_permission")(
+            lambda request: HttpResponse("allowed")
+        )
+        with patch(
+            "security.decorators.setting_handler.get_setting",
+            return_value=SimpleNamespace(processed_value=["reviewer"]),
+        ):
+            with self.assertRaises(PermissionDenied):
+                guarded(self.request_for("reviewer"))
+
+    def test_setting_edit_uses_active_role_not_other_memberships(self):
+        guarded = decorators.user_can_edit_setting(
+            lambda request, **kwargs: HttpResponse("allowed")
+        )
+        setting = SimpleNamespace(editable_by=["editor"])
+        with patch(
+            "security.decorators.setting_handler.get_setting",
+            return_value=setting,
+        ):
+            with self.assertRaises(PermissionDenied):
+                guarded(
+                    self.request_for("author"),
+                    setting_group="general",
+                    setting_name="some_setting",
+                )
+            self.assertEqual(
+                guarded(
+                    self.request_for("editor"),
+                    setting_group="general",
+                    setting_name="some_setting",
+                ).status_code,
+                200,
+            )
