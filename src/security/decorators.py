@@ -148,7 +148,7 @@ def editor_or_manager(func):
 
         if request.journal and (
             request.user.is_editor(request)
-            or request.user.is_journal_manager(request.journal)
+            or request.user.has_active_role(request, "journal-manager", staff_override=False)
         ):
             return func(request, *args, **kwargs)
 
@@ -248,7 +248,7 @@ def user_can_edit_setting(func):
         if not setting_group_name or not setting_name:
             deny_access(request)
 
-        if request.user.is_staff or request.user.is_journal_manager(request.journal):
+        if request.user.is_staff or request.user.has_active_role(request, "journal-manager", staff_override=False):
             return func(request, *args, **kwargs)
 
         setting = setting_handler.get_setting(
@@ -273,8 +273,8 @@ def editor_or_journal_manager_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.user.is_editor(request) or request.user.is_journal_manager(
-            request.journal
+        if request.user.is_editor(request) or request.user.has_active_role(
+            request, "journal-manager", staff_override=False
         ):
             return func(request, *args, **kwargs)
         deny_access(request)
@@ -301,13 +301,16 @@ def editor_user_required(func):
         if (
             request.user.is_editor(request)
             or request.user.is_staff
-            or request.user.is_journal_manager(request.journal)
+            or request.user.has_active_role(request, "journal-manager", staff_override=False)
         ):
             return func(request, *args, **kwargs)
 
         elif request.user.is_section_editor(request) and article_id:
             article = get_object_or_404(models.Article, pk=article_id)
-            if request.user in article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
             else:
                 deny_access(request, "You are not a section editor for this article")
@@ -522,7 +525,10 @@ def typesetting_user_or_production_user_or_editor_required(func):
                 pk=article_id,
                 journal=request.journal,
             )
-            if request.user in article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
         elif galley_id:
             galley = get_object_or_404(
@@ -562,7 +568,10 @@ def production_user_or_editor_required(func):
                 pk=article_id,
                 journal=request.journal,
             )
-            if request.user in article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
         elif typeset_id:
             typeset_task = get_object_or_404(
@@ -842,7 +851,7 @@ def user_can_edit_article(func):
 
         article = models.Article.get_article(request.journal, "id", article_id)
 
-        if article.can_edit(request.user):
+        if article.can_edit(request.user, request=request):
             return func(request, *args, **kwargs)
         else:
             deny_access(request)
@@ -860,7 +869,7 @@ def user_can_edit_author(func):
     def wrapper(request, *args, **kwargs):
         author_id = kwargs["author_id"]
         author = models.FrozenAuthor.objects.get(pk=author_id)
-        if author.can_edit(request.user):
+        if author.can_edit(request.user, request=request):
             return func(request, *args, **kwargs)
         else:
             deny_access(request)
@@ -1152,7 +1161,10 @@ def typesetter_or_editor_required(func):
                 pk=article_id,
                 journal=request.journal,
             )
-            if request.user in article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
 
         deny_access(request)
@@ -1183,7 +1195,10 @@ def proofing_manager_or_editor_required(func):
                 pk=article_id,
                 journal=request.journal,
             )
-            if request.user in article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
         else:
             deny_access(request)
@@ -1208,7 +1223,10 @@ def proofing_manager_for_article_required(func):
         if request.user.is_editor(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
-        if request.user in article.section_editors():
+        if (
+                request.user.is_section_editor(request)
+                and request.user in article.section_editors()
+            ):
             return func(request, *args, **kwargs)
 
         if not request.user.is_proofing_manager(request):
@@ -1267,11 +1285,15 @@ def proofreader_for_article_required(func):
             return func(request, *args, **kwargs)
 
         # proofing manager
-        elif article and request.user == article.proofingassignment.proofing_manager:
+        elif (
+            article
+            and request.user.is_proofing_manager(request)
+            and request.user == article.proofingassignment.proofing_manager
+        ):
             return func(request, *args, **kwargs)
 
         # User is Assigned as proofreader, regardless of role
-        elif proofing_models.ProofingTask.objects.filter(
+        elif request.user.is_proofreader(request) and proofing_models.ProofingTask.objects.filter(
             pk=kwargs["proofing_task_id"],
             proofreader=request.user,
             cancelled=False,
@@ -1297,6 +1319,9 @@ def typesetter_for_corrections_required(func):
     def wrapper(request, *args, **kwargs):
         if request.user.is_editor(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
+
+        if not request.user.is_typesetter(request):
+            deny_access(request)
 
         try:
             proofing_models.TypesetterProofingTask.objects.get(
@@ -1488,7 +1513,7 @@ def submission_authorised(func):
     def submission_authorised_wrapper(request, *args, **kwargs):
         if (
             request.user.is_staff
-            or (request.journal and request.user in request.journal.editors())
+            or (request.journal and request.user.is_editor(request))
             or (
                 request.repository and request.user in request.repository.managers.all()
             )
