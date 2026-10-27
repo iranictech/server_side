@@ -1325,9 +1325,12 @@ def proofreader_for_article_required(func):
         ):
             return func(request, *args, **kwargs)
 
-        # User is Assigned as proofreader, regardless of role
+        # Authors may proofread when explicitly assigned to a proofing task.
         elif (
-            request.user.is_proofreader(request)
+            (
+                request.user.is_proofreader(request)
+                or request.user.is_author(request)
+            )
             and proofing_models.ProofingTask.objects.filter(
                 pk=kwargs["proofing_task_id"],
                 proofreader=request.user,
