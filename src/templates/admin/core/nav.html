@@ -5,6 +5,7 @@
 
 {% is_editor as editor %}
 {% is_any_editor as any_editor %}
+{% is_author as author %}
 
 <div class="off-canvas position-left reveal-for-large" id="offCanvas" data-off-canvas>
     <button class="close-button" aria-label="Close menu" type="button" data-close>
@@ -151,60 +152,38 @@
 
     <header class="main-header" role="banner">
         <div class="row expanded">
-            <div class="small-3 columns hide-for-large">
+            <div class="small-3 columns hide-for-large header-menu-toggle">
                 <button type="button" class="button hide-for-large" data-toggle="offCanvas"><img src="{% static "
                         admin/img/icons/menu-toggle.svg" %}" alt="Menu"> Menu
                 </button>
                 &nbsp;
             </div>
-            <div class="small-6 large-10 columns show-for-large">
+            <div class="small-6 large-10 columns show-for-large header-journal-title">
                 <h1><a href="{% url 'website_index' %}">{{ request.journal.name }}</a></h1>
             </div>
-            <div class="small-6 columns text-center show-for-medium-only">
+            <div class="small-6 columns text-center show-for-medium-only header-journal-title">
                 <h1><a href="{% url 'website_index' %}">{{ request.journal.code }}</a></h1>
             </div>
-            <div class="small-6 columns text-center show-for-small-only">
+            <div class="small-6 columns text-center show-for-small-only header-journal-title">
                 <h1><a href="{% url 'website_index' %}">{{ request.journal.code }}</a></h1>
             </div>
-            <div class="small-3 large-2 columns text-right">
+            <div class="small-3 large-2 columns text-right header-user-tools">
                 {% if request.user.is_authenticated %}
-                <div class="profile">
-                    <a class="float-right" data-toggle="profile-dropdown">
-                        {% include "elements/avatar.html" with user=request.user tooltip="off" %}
-                    </a>
+                <div class="header-account-controls">
+                    <div class="profile">
+                        <a data-toggle="profile-dropdown" aria-label="Open profile menu">
+                            {% include "elements/avatar.html" with user=request.user tooltip="off" %}
+                        </a>
+                    </div>
+                    {% include "admin/elements/active_role_switcher.html" %}
                 </div>
                 <div class="dropdown-pane bottom" id="profile-dropdown" data-dropdown data-close-on-click="true">
                     <ul class="menu vertical">
-                        {% if not journal_settings.general.disable_journal_submission %}
+                        {% if author and not journal_settings.general.disable_journal_submission %}
                         <li><a href="{% url 'submission_start' %}">Submit</a></li>
                         {% endif %}
 
                         <li><a href="{% url 'core_edit_profile' %}">Profile</a></li>
-
-                        {% if request.journal_roles %}
-                        <li class="subtitle">
-                            <a href="#">Switch Role</a>
-                        </li>
-
-                        {% for account_role in request.journal_roles %}
-                        <li>
-                            <form action="{% url 'core_switch_active_role' account_role.role.slug %}" method="post"
-                                style="margin: 0;">
-                                {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-
-                                <button type="submit"
-                                    style="width: 100%; text-align: left; background: none; border: 0; padding: 0.7rem 1rem; cursor: pointer;">
-                                    {% if request.active_role_slug == account_role.role.slug %}
-                                    <strong>✓ {{ account_role.role.name }}</strong>
-                                    {% else %}
-                                    {{ account_role.role.name }}
-                                    {% endif %}
-                                </button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                        {% endif %}
 
                         {% if request.user.is_staff or editor %}
                         <li><a href="{% url 'core_manager_index' %}">Manager</a></li>
