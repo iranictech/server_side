@@ -4618,7 +4618,7 @@ class TestSecurity(TestCase):
             setting_group_name="general",
             setting_name="enable_share_reviews_decision",
             journal=self.journal_one,
-            value="On",
+            value="on",
         )
         func = Mock()
         decorator = decorators.setting_is_enabled(
