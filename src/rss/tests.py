@@ -3,6 +3,7 @@ __author__ = "Andy Byers"
 __license__ = "AGPL v3"
 __maintainer__ = "Birkbeck Centre for Technology and Publishing"
 
+from django.contrib.sites.models import Site
 from django.test import TestCase, override_settings
 from django.urls.base import clear_script_prefix
 from django.utils import timezone
@@ -27,6 +28,10 @@ class TestFeedURLs(TestCase):
             [cls.repo_manager],
             [],
             domain=cls.repository_domain,
+        )
+        Site.objects.get_or_create(
+            domain=cls.repository_domain,
+            defaults={"name": "RSS Test Repository"},
         )
         cls.preprint_author = helpers.create_user("rss_author@janeway.systems")
         cls.preprint = helpers.create_preprint(
