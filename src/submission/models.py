@@ -2005,8 +2005,10 @@ class Article(AbstractLastModifiedModel):
                     return True
             elif user.is_editor(request=None, journal=self.journal):
                 return True
-        if self.owner == user and self.is_unsubmitted() and (
-            request is None or user.is_author(request)
+        if (
+            self.owner == user
+            and self.is_unsubmitted()
+            and (request is None or user.is_author(request))
         ):
             return True
         return False
@@ -2744,8 +2746,10 @@ class FrozenAuthor(AbstractLastModifiedModel):
                     return True
             elif user.is_editor(request=None, journal=self.article.journal):
                 return True
-        if self.owner == user and self.article.is_unsubmitted() and (
-            request is None or user.is_author(request)
+        if (
+            self.owner == user
+            and self.article.is_unsubmitted()
+            and (request is None or user.is_author(request))
         ):
             # FrozenAuthor.owner can be the linked author or article owner.
             return True
