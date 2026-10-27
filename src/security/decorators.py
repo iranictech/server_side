@@ -170,7 +170,8 @@ def production_manager_roles(func):
     @base_check_required
     def wrapper(request, *args, **kwargs):
         if (
-            request.user.is_editor(request)
+            request.user.is_staff
+            or request.user.is_editor(request)
             or request.user.is_section_editor(request)
             or request.user.is_production(request)
         ):
@@ -192,7 +193,8 @@ def proofing_manager_roles(func):
     @base_check_required
     def wrapper(request, *args, **kwargs):
         if (
-            request.user.is_editor(request)
+            request.user.is_staff
+            or request.user.is_editor(request)
             or request.user.is_section_editor(request)
             or request.user.is_proofing_manager(request)
         ):
@@ -290,8 +292,12 @@ def editor_or_journal_manager_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.user.is_editor(request) or request.user.has_active_role(
-            request, "journal-manager", staff_override=False
+        if (
+            request.user.is_staff
+            or request.user.is_editor(request)
+            or request.user.has_active_role(
+                request, "journal-manager", staff_override=False
+            )
         ):
             return func(request, *args, **kwargs)
         deny_access(request)
