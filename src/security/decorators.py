@@ -148,7 +148,9 @@ def editor_or_manager(func):
 
         if request.journal and (
             request.user.is_editor(request)
-            or request.user.has_active_role(request, "journal-manager", staff_override=False)
+            or request.user.has_active_role(
+                request, "journal-manager", staff_override=False
+            )
         ):
             return func(request, *args, **kwargs)
 
@@ -227,11 +229,8 @@ def role_can_access(access_setting):
             active_role = getattr(request, "active_role_slug", None)
             setting_roles = set(setting.processed_value or [])
 
-            if (
-                active_role in setting_roles
-                and request.user.has_active_role(
-                    request, active_role, staff_override=False
-                )
+            if active_role in setting_roles and request.user.has_active_role(
+                request, active_role, staff_override=False
             ):
                 return func(request, *args, **kwargs)
 
@@ -268,11 +267,10 @@ def user_can_edit_setting(func):
 
         active_role = getattr(request, "active_role_slug", None)
         if active_role:
-            if (
-                active_role in (setting.editable_by or [])
-                and request.user.has_active_role(
-                    request, active_role, staff_override=False
-                )
+            if active_role in (
+                setting.editable_by or []
+            ) and request.user.has_active_role(
+                request, active_role, staff_override=False
             ):
                 return func(request, *args, **kwargs)
         elif logic.user_can_edit_setting(setting, request.user, request.journal):
@@ -324,7 +322,9 @@ def editor_user_required(func):
         if (
             request.user.is_editor(request)
             or request.user.is_staff
-            or request.user.has_active_role(request, "journal-manager", staff_override=False)
+            or request.user.has_active_role(
+                request, "journal-manager", staff_override=False
+            )
         ):
             return func(request, *args, **kwargs)
 
@@ -745,9 +745,7 @@ def article_production_user_required(func):
             request.user in article.section_editors()
         ):
             return func(request, *args, **kwargs)
-        if request.user.is_editor(request) and (
-            request.user in article.editor_list()
-        ):
+        if request.user.is_editor(request) and (request.user in article.editor_list()):
             return func(request, *args, **kwargs)
 
         if (
@@ -757,9 +755,8 @@ def article_production_user_required(func):
         ):
             return func(request, *args, **kwargs)
 
-        if (
-            article.stage == models.STAGE_PROOFING
-            and request.user.is_proofing_manager(request)
+        if article.stage == models.STAGE_PROOFING and request.user.is_proofing_manager(
+            request
         ):
             proofing_assigned = get_object_or_404(
                 proofing_models.ProofingAssignment, article=article
@@ -1327,18 +1324,14 @@ def proofreader_for_article_required(func):
 
         # Authors may proofread when explicitly assigned to a proofing task.
         elif (
-            (
-                request.user.is_proofreader(request)
-                or request.user.is_author(request)
-            )
-            and proofing_models.ProofingTask.objects.filter(
-                pk=kwargs["proofing_task_id"],
-                proofreader=request.user,
-                cancelled=False,
-                completed__isnull=True,
-                round__assignment__article__journal=request.journal,
-            ).exists()
-        ):
+            request.user.is_proofreader(request) or request.user.is_author(request)
+        ) and proofing_models.ProofingTask.objects.filter(
+            pk=kwargs["proofing_task_id"],
+            proofreader=request.user,
+            cancelled=False,
+            completed__isnull=True,
+            round__assignment__article__journal=request.journal,
+        ).exists():
             return func(request, *args, **kwargs)
 
         else:
