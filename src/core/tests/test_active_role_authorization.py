@@ -18,6 +18,7 @@ from utils.testing import helpers
 class TestActiveRoleAuthorization(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.press = helpers.create_press()
         cls.journal, cls.other_journal = helpers.create_journals()
         helpers.create_roles(
             ["author", "editor", "reader", "journal-manager", "reviewer"]
@@ -131,7 +132,9 @@ class TestActiveRoleAuthorization(TestCase):
         self.client.force_login(self.user)
         url = reverse("core_switch_active_role", kwargs={"role_slug": "editor"})
         response = self.client.post(url, SERVER_NAME=self.journal.domain)
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, reverse("core_dashboard"), fetch_redirect_response=False
+        )
         roles = self.client.session["janeway_active_roles"]
         self.assertEqual(roles[str(self.journal.pk)], "editor")
 
