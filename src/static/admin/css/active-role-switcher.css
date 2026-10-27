@@ -1,0 +1,155 @@
+/* Journal dashboard: role selector displayed to the right of the profile avatar. */
+.main-header > .row.expanded {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.main-header .header-menu-toggle {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.main-header .header-journal-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+}
+
+.main-header .header-journal-title h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-header .header-user-tools {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+    padding-left: 0.25rem;
+    padding-right: 0.75rem;
+}
+
+.main-header .header-account-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    height: 3.75rem;
+}
+
+.main-header .header-account-controls .profile {
+    flex: 0 0 auto;
+}
+
+.main-header .active-role-switcher {
+    position: relative;
+    flex: 0 0 auto;
+    text-align: left;
+    font-size: 0.8125rem;
+    color: #333b49;
+}
+
+.main-header .active-role-switcher__trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dfe3ea;
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+    list-style: none;
+    white-space: nowrap;
+}
+
+.main-header .active-role-switcher__trigger::-webkit-details-marker {
+    display: none;
+}
+
+.main-header .active-role-switcher__trigger:hover,
+.main-header .active-role-switcher[open] .active-role-switcher__trigger {
+    background: #f7f8fa;
+    border-color: #c5cbd4;
+}
+
+.main-header .active-role-switcher__trigger:focus-visible,
+.main-header .active-role-switcher__option:focus-visible {
+    outline: 2px solid #5a98e5;
+    outline-offset: 2px;
+}
+
+.main-header .active-role-switcher__caption {
+    color: #777f8b;
+}
+
+.main-header .active-role-switcher__name {
+    display: inline-block;
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.main-header .active-role-switcher__menu {
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    right: 0;
+    z-index: 100;
+    min-width: 12rem;
+    padding: 0.3rem;
+    border: 1px solid #e2e5eb;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(28, 41, 59, 0.12);
+}
+
+.main-header .active-role-switcher__menu form {
+    margin: 0;
+}
+
+.main-header .active-role-switcher__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.65rem 0.7rem;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #384252;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.main-header .active-role-switcher__option:hover,
+.main-header .active-role-switcher__option--selected {
+    background: #f0f5fb;
+    color: #235783;
+}
+
+@media screen and (max-width: 39.9375em) {
+    .main-header .header-user-tools {
+        padding-right: 0.25rem;
+    }
+
+    .main-header .header-account-controls {
+        gap: 0.125rem;
+    }
+
+    .main-header .active-role-switcher__caption {
+        display: none;
+    }
+
+    .main-header .active-role-switcher__trigger {
+        gap: 0.3rem;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .main-header .active-role-switcher__name {
+        max-width: 4.5rem;
+    }
+}
