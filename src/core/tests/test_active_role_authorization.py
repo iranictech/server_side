@@ -58,9 +58,7 @@ class TestActiveRoleAuthorization(TestCase):
     def test_selected_role_is_verified_against_journal_membership(self):
         self.assertFalse(self.user.is_reviewer(self.request_for("reviewer")))
         self.assertFalse(
-            self.user.is_editor(
-                self.request_for("editor", journal=self.other_journal)
-            )
+            self.user.is_editor(self.request_for("editor", journal=self.other_journal))
         )
 
     def test_editor_membership_cannot_edit_as_author(self):
@@ -68,7 +66,9 @@ class TestActiveRoleAuthorization(TestCase):
         author_record = self.author_record
 
         self.assertTrue(article.can_edit(self.user, request=self.request_for("editor")))
-        self.assertFalse(article.can_edit(self.user, request=self.request_for("author")))
+        self.assertFalse(
+            article.can_edit(self.user, request=self.request_for("author"))
+        )
         self.assertTrue(
             author_record.can_edit(self.user, request=self.request_for("editor"))
         )
@@ -146,9 +146,7 @@ class TestActiveRoleAuthorization(TestCase):
             "core_switch_active_role", kwargs={"role_slug": "reviewer"}
         )
         self.assertEqual(
-            self.client.post(
-                invalid_url, SERVER_NAME=self.journal.domain
-            ).status_code,
+            self.client.post(invalid_url, SERVER_NAME=self.journal.domain).status_code,
             404,
         )
         self.assertEqual(
