@@ -797,7 +797,11 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
     def has_active_role(self, request, role, staff_override=True):
         """
-        Check whether the user is operating under the requested active role.
+        Check a journal role in the current request context.
+
+        A selected role must still belong to this account on this journal.
+        Keep the legacy membership fallback for code paths without an active
+        role (e.g. management commands and older unit-test request stubs).
         """
         if not self.is_authenticated:
             return False
@@ -865,9 +869,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
             return True
 
         return False
-
-    def is_reader(self, request):
-        return self.check_role(request.journal, "reader", staff_override=False)
 
     def snapshot_affiliations(self, frozen_author):
         """

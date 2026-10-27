@@ -54,11 +54,11 @@ def funding_is_enabled(func):
             # Staff and editors can bypass this requirement.
             if (
                 request.user.is_staff
-                or request.user in article.section_editors()
-                or request.user.is_editor(
-                    request=None,
-                    journal=article.journal,
+                or (
+                    request.user.is_section_editor(request)
+                    and request.user in article.section_editors()
                 )
+                or request.user.is_editor(request)
             ):
                 return func(request, *args, **kwargs)
 

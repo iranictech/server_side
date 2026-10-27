@@ -13,6 +13,7 @@ def can_edit_file(request, user, file_object, article):
         return False
 
     # a general set of conditions that allow file editing
+    # Ownership is an independent object-level grant, not an inactive role.
     if user.is_staff or user.is_editor(request) or file_object.owner == user:
         return True
 
@@ -43,7 +44,8 @@ def can_edit_file(request, user, file_object, article):
         proofing_models.ProofingAssignment.objects.get(
             proofing_manager=user, article=file_object.article
         )
-        return True
+        if user.is_proofing_manager(request):
+            return True
     except proofing_models.ProofingAssignment.DoesNotExist:
         pass
 
@@ -51,7 +53,7 @@ def can_edit_file(request, user, file_object, article):
     prod_task = production_models.TypesetTask.objects.filter(
         typesetter=request.user, assignment__article=article, completed__isnull=True
     ).exists()
-    if prod_task:
+    if prod_task and user.is_typesetter(request):
         return True
 
     # Allow access to typesetters during proofing corrections
@@ -61,7 +63,7 @@ def can_edit_file(request, user, file_object, article):
         completed__isnull=True,
     )
 
-    if correction_task:
+    if correction_task and user.is_typesetter(request):
         return True
 
     # deny access to all others
@@ -86,6 +88,7 @@ def can_view_file(request, user, file_object=None):
     if user.is_anonymous:
         return False
 
+    # Ownership is an independent object-level grant, not an inactive role.
     if user.is_staff or user.is_editor(request) or file_object.owner == user:
         return True
 
@@ -101,7 +104,8 @@ def can_view_file(request, user, file_object=None):
             article__pk=file_object.article_id,
             completed__isnull=True,
         )
-        return True
+        if user.is_proofing_manager(request):
+            return True
     except proofing_models.ProofingAssignment.DoesNotExist:
         pass
 
@@ -120,7 +124,7 @@ def can_view_file(request, user, file_object=None):
         typeset_assignments = production_assigned.active_typeset_tasks()
         typesetters = [task.typesetter for task in typeset_assignments]
 
-        if request.user in typesetters:
+        if user.is_typesetter(request) and request.user in typesetters:
             return True
     except production_models.ProductionAssignment.DoesNotExist:
         pass
@@ -159,6 +163,10 @@ def can_see_pii(request, article):
         submission_models.STAGE_UNDER_REVIEW,
         submission_models.STAGE_UNDER_REVISION,
     ]
-    if request.user in article.section_editors() and article.stage in stages:
+    if (
+        request.user.is_section_editor(request)
+        and request.user in article.section_editors()
+        and article.stage in stages
+    ):
         return False
     return True
