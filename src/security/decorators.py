@@ -225,7 +225,12 @@ def role_can_access(access_setting):
             active_role = getattr(request, "active_role_slug", None)
             setting_roles = set(setting.processed_value or [])
 
-            if active_role and active_role in setting_roles:
+            if (
+                active_role in setting_roles
+                and request.user.has_active_role(
+                    request, active_role, staff_override=False
+                )
+            ):
                 return func(request, *args, **kwargs)
 
             deny_access(request)
@@ -248,7 +253,9 @@ def user_can_edit_setting(func):
         if not setting_group_name or not setting_name:
             deny_access(request)
 
-        if request.user.is_staff or request.user.has_active_role(request, "journal-manager", staff_override=False):
+        if request.user.is_staff or request.user.has_active_role(
+            request, "journal-manager", staff_override=False
+        ):
             return func(request, *args, **kwargs)
 
         setting = setting_handler.get_setting(
@@ -257,7 +264,17 @@ def user_can_edit_setting(func):
             journal=request.journal,
         )
 
-        if logic.user_can_edit_setting(setting, request.user, request.journal):
+        active_role = getattr(request, "active_role_slug", None)
+        if active_role:
+            if (
+                active_role in (setting.editable_by or [])
+                and request.user.has_active_role(
+                    request, active_role, staff_override=False
+                )
+            ):
+                return func(request, *args, **kwargs)
+        elif logic.user_can_edit_setting(setting, request.user, request.journal):
+            # Legacy non-middleware callers that do not have a selected role.
             return func(request, *args, **kwargs)
 
         deny_access(request)
@@ -535,7 +552,10 @@ def typesetting_user_or_production_user_or_editor_required(func):
                 core_models.Galley,
                 pk=galley_id,
             )
-            if request.user in galley.article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in galley.article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
 
         deny_access(request)
@@ -579,7 +599,10 @@ def production_user_or_editor_required(func):
                 pk=typeset_id,
                 assignment__article__journal=request.journal,
             )
-            if request.user in typeset_task.assignment.article.section_editors():
+            if (
+                request.user.is_section_editor(request)
+                and request.user in typeset_task.assignment.article.section_editors()
+            ):
                 return func(request, *args, **kwargs)
 
         deny_access(request)
@@ -709,33 +732,36 @@ def article_production_user_required(func):
             production_models.ProductionAssignment, article=article
         )
 
-        # if the user is editor or section editor of the article
-        if (
+        # Assigned article access must be scoped to the selected role.
+        if request.user.is_staff:
+            return func(request, *args, **kwargs)
+        if request.user.is_section_editor(request) and (
             request.user in article.section_editors()
-            or request.user in article.editor_list()
+        ):
+            return func(request, *args, **kwargs)
+        if request.user.is_editor(request) and (
+            request.user in article.editor_list()
         ):
             return func(request, *args, **kwargs)
 
-        # If article is in production and user is the production manager
         if (
-            (assigned.production_manager.pk == request.user.pk)
+            request.user.is_production(request)
+            and assigned.production_manager_id == request.user.pk
             and article.stage == models.STAGE_TYPESETTING
-        ) or request.user.is_staff:
+        ):
             return func(request, *args, **kwargs)
 
-        # If article is in proofing and the user is the proofing manager
-        if article.stage == models.STAGE_PROOFING:
+        if (
+            article.stage == models.STAGE_PROOFING
+            and request.user.is_proofing_manager(request)
+        ):
             proofing_assigned = get_object_or_404(
                 proofing_models.ProofingAssignment, article=article
             )
-            if (
-                request.user.is_proofing_manager
-                and proofing_assigned.proofing_manager == request.user
-            ) or request.user.is_staff:
+            if proofing_assigned.proofing_manager == request.user:
                 return func(request, *args, **kwargs)
 
-        else:
-            deny_access(request)
+        deny_access(request)
 
     return wrapper
 
@@ -825,6 +851,7 @@ def article_stage_accepted_or_later_or_staff_required(func):
             return func(request, *args, **kwargs)
         elif (
             article_object is not None
+            and request.user.is_section_editor(request)
             and request.user in article_object.section_editors()
         ):
             return func(request, *args, **kwargs)
@@ -1224,9 +1251,9 @@ def proofing_manager_for_article_required(func):
             return func(request, *args, **kwargs)
 
         if (
-                request.user.is_section_editor(request)
-                and request.user in article.section_editors()
-            ):
+            request.user.is_section_editor(request)
+            and request.user in article.section_editors()
+        ):
             return func(request, *args, **kwargs)
 
         if not request.user.is_proofing_manager(request):
@@ -1293,13 +1320,16 @@ def proofreader_for_article_required(func):
             return func(request, *args, **kwargs)
 
         # User is Assigned as proofreader, regardless of role
-        elif request.user.is_proofreader(request) and proofing_models.ProofingTask.objects.filter(
-            pk=kwargs["proofing_task_id"],
-            proofreader=request.user,
-            cancelled=False,
-            completed__isnull=True,
-            round__assignment__article__journal=request.journal,
-        ).exists():
+        elif (
+            request.user.is_proofreader(request)
+            and proofing_models.ProofingTask.objects.filter(
+                pk=kwargs["proofing_task_id"],
+                proofreader=request.user,
+                cancelled=False,
+                completed__isnull=True,
+                round__assignment__article__journal=request.journal,
+            ).exists()
+        ):
             return func(request, *args, **kwargs)
 
         else:
