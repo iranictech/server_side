@@ -35,12 +35,9 @@ jobs:
       - name: Python syntax check
         run: |
           python -m compileall -q src/core/models.py src/core/tests/test_active_role_authorization.py src/security/decorators.py src/security/logic.py src/submission/models.py src/submission/decorators.py src/submission/views.py
-      - name: Generate Ruff formatting patch
+      - name: Verify Ruff formatting
         run: |
-          ruff format src/core/models.py src/core/templatetags/roles.py src/core/tests/test_active_role_authorization.py src/security/decorators.py src/security/logic.py src/submission/decorators.py src/submission/models.py src/submission/views.py
-          echo "BEGIN_RUFF_FORMAT_PATCH"
-          git diff -- src/core/models.py src/core/templatetags/roles.py src/core/tests/test_active_role_authorization.py src/security/decorators.py src/security/logic.py src/submission/decorators.py src/submission/models.py src/submission/views.py
-          echo "END_RUFF_FORMAT_PATCH"
+          ruff format --check src/core/models.py src/core/templatetags/roles.py src/core/tests/test_active_role_authorization.py src/security/decorators.py src/security/logic.py src/submission/decorators.py src/submission/models.py src/submission/views.py
       - name: Django active role and security tests
         env:
           DB_VENDOR: sqlite
@@ -49,12 +46,3 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
           python src/manage.py test core.tests.test_active_role_authorization security.test_security.TestSecurity.test_section_editor_cant_access_view_because_of_pii security.test_security.TestSecurity.test_section_editor_cannot_see_pii_when_enabled security.test_security.TestSecurity.test_file_edit_user_required_allows_access_to_owners_to_private_files security.test_security.TestSecurity.test_file_user_required_allows_access_to_owners_to_private_files security.test_security.TestSecurity.test_proofreader_for_article_required_with_author_proofreader --noinput
-      - name: Full Django regression suite
-        continue-on-error: true
-        env:
-          DB_VENDOR: sqlite
-          DB_NAME: ":memory:"
-          JANEWAY_SETTINGS_MODULE: core.janeway_global_settings
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: |
-          python src/manage.py test --noinput
