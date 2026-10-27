@@ -177,6 +177,8 @@ urlpatterns = [
         core_views.role_action,
         name="core_manager_role_action",
     ),
+
+
     re_path(
         r"^role/(?P<role_slug>[-\w]+)/switch/$",
         core_views.switch_active_role,
