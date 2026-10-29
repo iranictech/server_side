@@ -178,6 +178,31 @@
                         <li><a href="{% url 'submission_start' %}">Submit</a></li>
                         {% endif %}
                         <li><a href="{% url 'core_edit_profile' %}">Profile</a></li>
+                        {% if request.journal_roles %}
+                        <li class="subtitle">
+                            <a href="#">Switch Role</a>
+                        </li>
+
+                        {% for account_role in request.journal_roles %}
+                        <li>
+                            <form action="{% url 'core_switch_active_role' account_role.role.slug %}" method="post"
+                                style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                                <button type="submit"
+                                    style="width: 100%; text-align: left; background: none; border: 0; padding: 0.7rem 1rem; cursor: pointer;">
+                                    {% if request.active_role_slug == account_role.role.slug %}
+                                    <strong>✓ {{ account_role.role.name }}</strong>
+                                    {% else %}
+                                    {{ account_role.role.name }}
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                        {% endif %}
+
                         {% if request.user.is_staff or editor %}
                         <li><a href="{% url 'core_manager_index' %}">Manager</a></li>
                         {% endif %}

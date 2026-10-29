@@ -127,7 +127,7 @@ def senior_editor_user_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.user.is_editor(request) or request.user.is_staff:
+        if request.user.has_senior_editor_role(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
         else:
@@ -143,7 +143,13 @@ def editor_or_manager(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.journal and request.user in request.journal.editor_list():
+        if request.user.is_staff:
+            return func(request, *args, **kwargs)
+
+        if request.journal and (
+            request.user.has_senior_editor_role(request)
+            or request.user.is_journal_manager(request.journal)
+        ):
             return func(request, *args, **kwargs)
 
         if request.repository and request.user in request.repository.managers.all():
@@ -164,7 +170,7 @@ def production_manager_roles(func):
     @base_check_required
     def wrapper(request, *args, **kwargs):
         if (
-            request.user.is_editor(request)
+            request.user.has_senior_editor_role(request)
             or request.user.is_section_editor(request)
             or request.user.is_production(request)
         ):
@@ -186,7 +192,7 @@ def proofing_manager_roles(func):
     @base_check_required
     def wrapper(request, *args, **kwargs):
         if (
-            request.user.is_editor(request)
+            request.user.has_senior_editor_role(request)
             or request.user.is_section_editor(request)
             or request.user.is_proofing_manager(request)
         ):
@@ -216,13 +222,16 @@ def role_can_access(access_setting):
                 journal=request.journal,
             )
 
-            journal_roles = request.user.roles.get(request.journal.code) or set()
+            active_role = getattr(request, "active_role_slug", None)
             setting_roles = set(setting.processed_value or [])
 
-            # If no roles for the setting are configured we deny access
-            # in the event that we want all roles to have access they
-            # should be explicitly defined.
-            if setting_roles and journal_roles.intersection(setting_roles):
+            if (
+                active_role
+                and active_role in setting_roles
+                and request.user.has_active_role(
+                    request, active_role, staff_override=False
+                )
+            ):
                 return func(request, *args, **kwargs)
 
             deny_access(request)
@@ -270,7 +279,7 @@ def editor_or_journal_manager_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.user.is_editor(request) or request.user.is_journal_manager(
+        if request.user.has_senior_editor_role(request) or request.user.is_journal_manager(
             request.journal
         ):
             return func(request, *args, **kwargs)
@@ -296,7 +305,7 @@ def editor_user_required(func):
         article_id = kwargs.get("article_id", None)
 
         if (
-            request.user.is_editor(request)
+            request.user.has_senior_editor_role(request)
             or request.user.is_staff
             or request.user.is_journal_manager(request.journal)
         ):
@@ -505,7 +514,7 @@ def typesetting_user_or_production_user_or_editor_required(func):
         if (
             request.user.is_typesetter(request)
             or request.user.is_production(request)
-            or request.user.is_editor(request)
+            or request.user.has_senior_editor_role(request)
             or request.user.is_staff
         ):
             return func(request, *args, **kwargs)
@@ -529,7 +538,7 @@ def production_user_or_editor_required(func):
 
         if (
             request.user.is_production(request)
-            or request.user.is_editor(request)
+            or request.user.has_senior_editor_role(request)
             or request.user.is_staff
         ):
             return func(request, *args, **kwargs)
@@ -784,7 +793,7 @@ def article_stage_accepted_or_later_or_staff_required(func):
         elif request.user.is_anonymous:
             deny_access(request)
         elif article_object is not None and (
-            request.user.is_editor(request) or request.user.is_staff
+            request.user.has_senior_editor_role(request) or request.user.is_staff
         ):
             return func(request, *args, **kwargs)
         elif (
@@ -1103,7 +1112,7 @@ def typesetter_or_editor_required(func):
         article_id = kwargs.get("article_id", None)
         typeset_id = kwargs.get("typeset_id", None)
 
-        if request.user.is_editor(request) or request.user.is_staff:
+        if request.user.has_senior_editor_role(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
         if typeset_id:
@@ -1145,7 +1154,7 @@ def proofing_manager_or_editor_required(func):
         article_id = kwargs.get("article_id", None)
 
         if (
-            request.user.is_editor(request)
+            request.user.has_senior_editor_role(request)
             or request.user.is_staff
             or request.user.is_proofing_manager(request)
         ):
@@ -1173,12 +1182,16 @@ def proofing_manager_for_article_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        article = get_object_or_404(models.Article, pk=kwargs["article_id"])
+        article = get_object_or_404(
+            models.Article,
+            pk=kwargs["article_id"],
+            journal=request.journal,
+        )
 
         if not hasattr(article, "proofingassignment"):
             return redirect(reverse("proofing_list"))
 
-        if request.user.is_editor(request) or request.user.is_staff:
+        if request.user.has_senior_editor_role(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
         if request.user in article.section_editors():
@@ -1236,7 +1249,7 @@ def proofreader_for_article_required(func):
         else:
             article = None
 
-        if request.user.is_editor(request) or request.user.is_staff:
+        if request.user.has_senior_editor_role(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
         # proofing manager
@@ -1268,7 +1281,7 @@ def typesetter_for_corrections_required(func):
 
     @base_check_required
     def wrapper(request, *args, **kwargs):
-        if request.user.is_editor(request) or request.user.is_staff:
+        if request.user.has_senior_editor_role(request) or request.user.is_staff:
             return func(request, *args, **kwargs)
 
         try:
