@@ -12,9 +12,17 @@ def can_edit_file(request, user, file_object, article):
     if user.is_anonymous:
         return False
 
+    if file_object.article_id and (
+        article is None or file_object.article_id != article.pk
+    ):
+        return False
+
     # a general set of conditions that allow file editing
-    if user.is_staff or user.is_editor(request) or file_object.owner == user:
+    if user.is_staff or file_object.owner == user:
         return True
+
+    if user.has_senior_editor_role(request):
+        return article is not None and article.journal == request.journal
 
     # allow section editors to edit files of articles assigned to them
     if user.is_section_editor(request) and user in article.section_editors():
@@ -86,8 +94,13 @@ def can_view_file(request, user, file_object=None):
     if user.is_anonymous:
         return False
 
-    if user.is_staff or user.is_editor(request) or file_object.owner == user:
+    if user.is_staff or file_object.owner == user:
         return True
+
+    if user.has_senior_editor_role(request):
+        if file_object.article_id:
+            return file_object.article.journal == request.journal
+        return False
 
     # allow section editors to view files of articles assigned to them
     if user.is_section_editor(request) and file_object.article:

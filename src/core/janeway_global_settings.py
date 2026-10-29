@@ -119,6 +119,7 @@ MIDDLEWARE = (
     "django.middleware.security.SecurityMiddleware",
     "core.middleware.TimezoneMiddleware",
     "core.middleware.SiteSettingsMiddleware",
+    "core.middleware.ActiveRoleMiddleware",
     "core.middleware.MaintenanceModeMiddleware",
     "cron.middleware.CronMiddleware",
     "core.middleware.CounterCookieMiddleware",

@@ -70,6 +70,63 @@ def get_site_resources(request):
     return journal, repository, press, redirect_obj, site_path
 
 
+class ActiveRoleMiddleware(BaseMiddleware):
+    SESSION_KEY = "janeway_active_roles"
+
+    @staticmethod
+    def process_request(request):
+        request.active_role = None
+        request.active_role_slug = None
+        request.journal_roles = []
+
+        if not getattr(request, "journal", None):
+            return None
+
+        if not getattr(request, "user", None) or not request.user.is_authenticated:
+            return None
+
+        roles = list(
+            core_models.AccountRole.objects.filter(
+                user=request.user,
+                journal=request.journal,
+            )
+            .select_related("role")
+            .order_by("role__name", "role__slug")
+        )
+
+        request.journal_roles = roles
+
+        if not roles:
+            return None
+
+        active_roles = request.session.get(
+            ActiveRoleMiddleware.SESSION_KEY, {}
+        )
+
+        if not isinstance(active_roles, dict):
+            active_roles = {}
+
+        journal_key = str(request.journal.pk)
+        selected_slug = active_roles.get(journal_key)
+
+        role_by_slug = {
+            account_role.role.slug: account_role.role
+            for account_role in roles
+        }
+
+        if selected_slug not in role_by_slug:
+            selected_slug = roles[0].role.slug
+            active_roles[journal_key] = selected_slug
+            request.session[
+                ActiveRoleMiddleware.SESSION_KEY
+            ] = active_roles
+
+        request.active_role_slug = selected_slug
+        request.active_role = role_by_slug[selected_slug]
+
+        return None
+
+
 class SiteSettingsMiddleware(BaseMiddleware):
     @staticmethod
     def process_request(request):

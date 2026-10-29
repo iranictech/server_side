@@ -776,23 +776,82 @@ class Account(AbstractBaseUser, PermissionsMixin):
             role__slug="journal-manager",
         ).exists()
 
+    def has_active_role(self, request, role, staff_override=True):
+        """
+        Check whether the user is operating under the requested active role.
+
+        Active Role is a session/request context and does not replace the
+        user's real AccountRole membership.
+
+        When an active role exists, it must still belong to the authenticated
+        user in the current Journal. This prevents a forged session value from
+        creating access to a role the user does not actually have.
+
+        When no active role is selected, Janeway's original check_role()
+        behaviour is preserved.
+        """
+        if not self.is_authenticated:
+            return False
+
+        active_role_slug = getattr(request, "active_role_slug", None)
+
+        if active_role_slug:
+            if active_role_slug != role:
+                return False
+
+            # Verify that the selected role is genuinely assigned to this
+            # user in the current Journal. Do not allow staff/journal-manager
+            # override to bypass Active Role context.
+            return AccountRole.objects.filter(
+                user=self,
+                journal=request.journal,
+                role__slug=role,
+            ).exists()
+
+        return self.check_role(
+            request.journal,
+            role,
+            staff_override=staff_override,
+        )
+
     def is_editor(self, request, journal=None):
-        if not journal:
-            return self.check_role(request.journal, "editor")
-        else:
+        """
+        Return whether the user is operating as Editor in the current
+        Active Role context.
+
+        Explicit journal checks are intentionally preserved for existing
+        backend code paths that pass a journal directly.
+        """
+        if journal is not None:
             return self.check_role(journal, "editor")
 
+        return self.has_active_role(request, "editor")
+
+    def is_editor_in_chief(self, request):
+        """
+        Return whether the user is operating under the Editor-in-Chief
+        active role for the current journal.
+        """
+        return self.has_active_role(
+            request,
+            "editor-in-chief",
+            staff_override=False,
+        )
+
     def is_section_editor(self, request):
-        return self.check_role(request.journal, "section-editor")
+        return self.has_active_role(request, "section-editor")
+
+    def has_senior_editor_role(self, request):
+        """
+        Return True when the active role has journal-wide editorial authority.
+        """
+        return self.is_editor(request) or self.is_editor_in_chief(request)
 
     def has_an_editor_role(self, request):
-        editor = self.is_editor(request)
-        section_editor = self.is_section_editor(request)
-
-        if editor or section_editor:
-            return True
-
-        return False
+        """
+        Return True when the active role is any editorial role.
+        """
+        return self.has_senior_editor_role(request) or self.is_section_editor(request)
 
     def is_reviewer(self, request):
         return self.check_role(request.journal, "reviewer")

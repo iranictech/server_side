@@ -761,7 +761,11 @@ def serve_article_file(request, identifier_type, identifier, file_id):
 
     try:
         if file_id != "None":
-            file_object = get_object_or_404(core_models.File, pk=file_id)
+            file_object = get_object_or_404(
+                core_models.File,
+                pk=file_id,
+                article_id=article_object.pk,
+            )
             return files.serve_file(request, file_object, article_object)
         else:
             raise Http404
@@ -998,7 +1002,11 @@ def article_file_make_galley(request, article_id, file_id):
         pk=article_id,
         journal=request.journal,
     )
-    janeway_file = get_object_or_404(core_models.File, pk=file_id)
+    janeway_file = get_object_or_404(
+        core_models.File,
+        pk=file_id,
+        article_id=article_object.pk,
+    )
     blob = janeway_file.get_file(article_object, as_bytes=True)
     content_file = ContentFile(blob)
     content_file.name = janeway_file.original_filename

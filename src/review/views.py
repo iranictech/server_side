@@ -2543,7 +2543,11 @@ def editor_article_file(request, article_id, file_id):
         pk=article_id,
         journal=request.journal,
     )
-    file_object = get_object_or_404(core_models.File, pk=file_id)
+    file_object = get_object_or_404(
+        core_models.File,
+        pk=file_id,
+        article_id=article_object.pk,
+    )
 
     return files.serve_file(request, file_object, article_object)
 
