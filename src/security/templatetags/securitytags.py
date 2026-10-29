@@ -24,6 +24,14 @@ def is_editor(context):
 
 
 @register.simple_tag(takes_context=True)
+def is_senior_editor(context):
+    request = context["request"]
+    if request.user.is_anonymous:
+        return False
+    return request.user.has_senior_editor_role(request)
+
+
+@register.simple_tag(takes_context=True)
 def is_section_editor(context):
     request = context["request"]
     if request.user.is_anonymous:

@@ -180,3 +180,31 @@ class EditorInChiefPortTests(TestCase):
         self.assertFalse(
             can_view_file(self.request(), self.eic, file_obj)
         )
+
+    def test_senior_editor_navigation_tag(self):
+        from django.template import Context, Template
+
+        template = Template(
+            "{% load securitytags %}"
+            "{% is_senior_editor as senior_editor %}"
+            "{% if senior_editor %}visible"
+            "{% else %}hidden{% endif %}"
+        )
+
+        cases = [
+            (self.request(role="editor-in-chief"), "visible"),
+            (self.request(role="author"), "hidden"),
+            (self.request(journal=self.journal_two), "hidden"),
+            (self.request(user=self.outsider), "hidden"),
+        ]
+
+        for request, expected in cases:
+            with self.subTest(
+                role=request.active_role_slug,
+                journal=request.journal.pk,
+                expected=expected,
+            ):
+                result = template.render(
+                    Context({"request": request})
+                )
+                self.assertEqual(result, expected)

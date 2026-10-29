@@ -4,6 +4,7 @@
 {% load hooks %}
 
 {% is_editor as editor %}
+{% is_senior_editor as senior_editor %}
 {% is_any_editor as any_editor %}
 
 <div class="off-canvas position-left reveal-for-large" id="offCanvas" data-off-canvas>
@@ -46,7 +47,7 @@
                 <i class="fa fa-tachometer">&nbsp;</i> Main
             </a>
         </li>
-        {% if editor %}
+        {% if senior_editor %}
             <li>
                 <a href="{% url 'kanban' %}">
                     <i class="fa fa-sticky-note">&nbsp;</i> Kanban
@@ -60,7 +61,7 @@
                 </a>
             </li>
         {% endif %}
-        {% if editor %}
+        {% if senior_editor %}
             <li class="subtitle">
                 <a href="#">Workflow</a>
             </li>
@@ -91,7 +92,7 @@
                 {% endif %}
             {% endfor %}
         {% endif %}
-        {% if editor %}
+        {% if senior_editor %}
             <li class="subtitle">
                 <a href="#">Back Content</a>
             </li>
