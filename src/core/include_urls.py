@@ -91,6 +91,11 @@ urlpatterns = [
         name="core_reset_password",
     ),
     re_path(r"^profile/$", core_views.edit_profile, name="core_edit_profile"),
+    re_path(
+        r"^role/(?P<role_slug>[-\w]+)/switch/$",
+        core_views.switch_active_role,
+        name="core_switch_active_role",
+    ),
     re_path(r"^logout/$", core_views.user_logout, name="core_logout"),
     re_path(r"^dashboard/$", core_views.dashboard, name="core_dashboard"),
     re_path(
