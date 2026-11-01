@@ -12,7 +12,6 @@ def candidate(pk, matches, load):
 
 
 class RankingTests(unittest.TestCase):
-
     def test_expertise_first(self):
         rows = [
             candidate(1, [], 0),

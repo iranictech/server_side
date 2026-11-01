@@ -9,7 +9,6 @@ ORCID = "0000-0002-1825-0097"
 
 
 class ExternalIdentityPipelineTests(unittest.TestCase):
-
     def setUp(self):
         self.article = SimpleNamespace(pk=123)
         self.editor = SimpleNamespace(pk=50)
@@ -22,23 +21,17 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
             "orcid_status": status,
         }
 
-    @patch(
-        "reviewer_matching.combined.fetch_public_email"
-    )
+    @patch("reviewer_matching.combined.fetch_public_email")
     @patch(
         "reviewer_matching.combined.resolve_janeway_orcid",
         return_value="new_external",
     )
-    @patch(
-        "reviewer_matching.combined.discover_external_researchers"
-    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
     @patch(
         "reviewer_matching.combined.get_internal_matches",
         return_value=[],
     )
-    def test_default_does_not_fetch_email(
-        self, internal, discovery, resolver, email
-    ):
+    def test_default_does_not_fetch_email(self, internal, discovery, resolver, email):
         discovery.return_value = [self.candidate()]
 
         result = build_combined_matches(
@@ -66,16 +59,12 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
         "reviewer_matching.combined.resolve_janeway_orcid",
         return_value="new_external",
     )
-    @patch(
-        "reviewer_matching.combined.discover_external_researchers"
-    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
     @patch(
         "reviewer_matching.combined.get_internal_matches",
         return_value=[],
     )
-    def test_explicit_email_lookup(
-        self, internal, discovery, resolver, email
-    ):
+    def test_explicit_email_lookup(self, internal, discovery, resolver, email):
         discovery.return_value = [self.candidate()]
 
         result = build_combined_matches(
@@ -98,25 +87,15 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
             enabled=True,
         )
 
-    @patch(
-        "reviewer_matching.combined.fetch_public_email"
-    )
-    @patch(
-        "reviewer_matching.combined.resolve_janeway_orcid"
-    )
-    @patch(
-        "reviewer_matching.combined.discover_external_researchers"
-    )
+    @patch("reviewer_matching.combined.fetch_public_email")
+    @patch("reviewer_matching.combined.resolve_janeway_orcid")
+    @patch("reviewer_matching.combined.discover_external_researchers")
     @patch(
         "reviewer_matching.combined.get_internal_matches",
         return_value=[],
     )
-    def test_ambiguous_orcid_is_not_queried(
-        self, internal, discovery, resolver, email
-    ):
-        discovery.return_value = [
-            self.candidate(None, "ambiguous")
-        ]
+    def test_ambiguous_orcid_is_not_queried(self, internal, discovery, resolver, email):
+        discovery.return_value = [self.candidate(None, "ambiguous")]
 
         result = build_combined_matches(
             self.article,
@@ -136,23 +115,17 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
         resolver.assert_not_called()
         email.assert_not_called()
 
-    @patch(
-        "reviewer_matching.combined.fetch_public_email"
-    )
+    @patch("reviewer_matching.combined.fetch_public_email")
     @patch(
         "reviewer_matching.combined.resolve_janeway_orcid",
         return_value="new_external",
     )
-    @patch(
-        "reviewer_matching.combined.discover_external_researchers"
-    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
     @patch(
         "reviewer_matching.combined.get_internal_matches",
         return_value=[],
     )
-    def test_email_lookup_has_request_limit(
-        self, internal, discovery, resolver, email
-    ):
+    def test_email_lookup_has_request_limit(self, internal, discovery, resolver, email):
         discovery.return_value = [
             {
                 **self.candidate(),

@@ -11,12 +11,8 @@ import requests
 
 
 BASE_URL = "https://api.openalex.org"
-AUTHOR_ID_RE = re.compile(
-    r"(?:https://openalex\.org/)?(A[0-9]+)\Z"
-)
-WORK_ID_RE = re.compile(
-    r"(?:https://openalex\.org/)?(W[0-9]+)\Z"
-)
+AUTHOR_ID_RE = re.compile(r"(?:https://openalex\.org/)?(A[0-9]+)\Z")
+WORK_ID_RE = re.compile(r"(?:https://openalex\.org/)?(W[0-9]+)\Z")
 
 
 class OpenAlexDiscoveryError(RuntimeError):
@@ -39,11 +35,7 @@ def validate_public_topics(topics):
 
         topic = topic.strip()
 
-        if (
-            not 2 <= len(topic) <= 80
-            or not topic.isprintable()
-            or "@" in topic
-        ):
+        if not 2 <= len(topic) <= 80 or not topic.isprintable() or "@" in topic:
             raise ValueError("Invalid public topic.")
 
         key = topic.casefold()
@@ -53,7 +45,6 @@ def validate_public_topics(topics):
             cleaned.append(topic)
 
     return cleaned
-
 
 
 def propose_article_topics(article, *, max_topics=3):
@@ -116,17 +107,10 @@ def discover_external_researchers(
     if not isinstance(limit, int) or not 1 <= limit <= 30:
         raise ValueError("Invalid researcher limit.")
 
-    if (
-        not isinstance(works_per_topic, int)
-        or not 1 <= works_per_topic <= 10
-    ):
+    if not isinstance(works_per_topic, int) or not 1 <= works_per_topic <= 10:
         raise ValueError("Invalid works limit.")
 
-    key = (
-        api_key
-        if api_key is not None
-        else os.environ.get("OPENALEX_API_KEY", "")
-    )
+    key = api_key if api_key is not None else os.environ.get("OPENALEX_API_KEY", "")
 
     headers = {
         "User-Agent": "Janeway-ReviewerMatching/0.1",
@@ -151,9 +135,7 @@ def discover_external_researchers(
                     params={
                         "search": topic,
                         "per_page": works_per_topic,
-                        "select": (
-                            "id,title,publication_year,authorships"
-                        ),
+                        "select": ("id,title,publication_year,authorships"),
                     },
                     headers=headers,
                     timeout=(3, 10),
@@ -163,21 +145,15 @@ def discover_external_researchers(
                 payload = response.json()
 
             except requests.RequestException as exc:
-                raise OpenAlexDiscoveryError(
-                    "OpenAlex request failed."
-                ) from exc
+                raise OpenAlexDiscoveryError("OpenAlex request failed.") from exc
 
             except ValueError as exc:
-                raise OpenAlexDiscoveryError(
-                    "Invalid OpenAlex JSON response."
-                ) from exc
+                raise OpenAlexDiscoveryError("Invalid OpenAlex JSON response.") from exc
 
             works = payload.get("results")
 
             if not isinstance(works, list):
-                raise OpenAlexDiscoveryError(
-                    "Unexpected OpenAlex response structure."
-                )
+                raise OpenAlexDiscoveryError("Unexpected OpenAlex response structure.")
 
             for work in works:
                 if not isinstance(work, dict):
@@ -212,11 +188,7 @@ def discover_external_researchers(
 
                     name = author.get("display_name")
 
-                    if (
-                        not author_id
-                        or not isinstance(name, str)
-                        or not name.strip()
-                    ):
+                    if not author_id or not isinstance(name, str) or not name.strip():
                         continue
 
                     record = candidates.setdefault(
@@ -231,13 +203,9 @@ def discover_external_researchers(
                         },
                     )
 
-                    resolved_orcid = extract_openalex_orcid(
-                        authorship
-                    )
+                    resolved_orcid = extract_openalex_orcid(authorship)
                     if resolved_orcid:
-                        record["orcid_candidates"].add(
-                            resolved_orcid
-                        )
+                        record["orcid_candidates"].add(resolved_orcid)
 
                     record["matched_public_topics"].add(topic)
                     record["evidence_work_ids"].add(work_id)
@@ -262,22 +230,22 @@ def discover_external_researchers(
             orcid = None
             orcid_status = "missing"
 
-        results.append({
-            "openalex_id": record["openalex_id"],
-            "name": record["name"],
-            "orcid": orcid,
-            "orcid_status": orcid_status,
-            "source": "openalex",
-            "matched_public_topics": sorted(
-                record["matched_public_topics"]
-            ),
-            "matching_works_count": len(works),
-            "evidence_work_ids": works,
-            "identity_verified": False,
-            "coi_status": "not_checked",
-            "invitation_ready": False,
-            "semantic_score": None,
-        })
+        results.append(
+            {
+                "openalex_id": record["openalex_id"],
+                "name": record["name"],
+                "orcid": orcid,
+                "orcid_status": orcid_status,
+                "source": "openalex",
+                "matched_public_topics": sorted(record["matched_public_topics"]),
+                "matching_works_count": len(works),
+                "evidence_work_ids": works,
+                "identity_verified": False,
+                "coi_status": "not_checked",
+                "invitation_ready": False,
+                "semantic_score": None,
+            }
+        )
 
     results.sort(
         key=lambda item: (

@@ -44,9 +44,7 @@ def build_combined_matches(
             for candidate in external:
                 item = dict(candidate)
 
-                orcid = normalize_orcid(
-                    item.get("orcid")
-                )
+                orcid = normalize_orcid(item.get("orcid"))
 
                 if item.get("orcid_status") == "ambiguous":
                     identity_status = "ambiguous_orcid"
@@ -110,9 +108,7 @@ def build_combined_matches(
         "cross_source_identity_resolution_complete": False,
         "external_status": external_status,
         "excluded_article_authors": excluded_article_authors,
-        "orcid_email_lookup_enabled": bool(
-            allow_external and allow_orcid_email
-        ),
+        "orcid_email_lookup_enabled": bool(allow_external and allow_orcid_email),
         "counts": {
             "internal": len(internal),
             "external": len(external),

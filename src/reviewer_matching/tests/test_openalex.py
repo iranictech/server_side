@@ -35,12 +35,9 @@ def response_for(works):
 
 
 class OpenAlexTests(unittest.TestCase):
-
     def test_validate_public_topics(self):
         self.assertEqual(
-            validate_public_topics(
-                ["Machine Learning", "machine learning"]
-            ),
+            validate_public_topics(["Machine Learning", "machine learning"]),
             ["Machine Learning"],
         )
 
@@ -50,13 +47,18 @@ class OpenAlexTests(unittest.TestCase):
 
     def test_discover_and_deduplicate_authors(self):
         session = Mock()
-        session.get.return_value = response_for([
-            work(101, [(1, "Researcher One")]),
-            work(102, [
-                (1, "Researcher One"),
-                (2, "Researcher Two"),
-            ]),
-        ])
+        session.get.return_value = response_for(
+            [
+                work(101, [(1, "Researcher One")]),
+                work(
+                    102,
+                    [
+                        (1, "Researcher One"),
+                        (2, "Researcher Two"),
+                    ],
+                ),
+            ]
+        )
 
         result = discover_external_researchers(
             ["Fuzzy Logic"],
@@ -109,17 +111,21 @@ class OpenAlexTests(unittest.TestCase):
 
     def test_reject_malformed_author_ids(self):
         session = Mock()
-        session.get.return_value = response_for([
-            {
-                "id": "https://openalex.org/W100",
-                "authorships": [{
-                    "author": {
-                        "id": "https://invalid.example/A100",
-                        "display_name": "Unknown",
-                    }
-                }],
-            }
-        ])
+        session.get.return_value = response_for(
+            [
+                {
+                    "id": "https://openalex.org/W100",
+                    "authorships": [
+                        {
+                            "author": {
+                                "id": "https://invalid.example/A100",
+                                "display_name": "Unknown",
+                            }
+                        }
+                    ],
+                }
+            ]
+        )
 
         result = discover_external_researchers(
             ["Data Science"],
@@ -127,8 +133,6 @@ class OpenAlexTests(unittest.TestCase):
         )
 
         self.assertEqual(result, [])
-
-
 
     def test_extract_primary_orcid_from_work(self):
         record = work(300, [(3, "Researcher Three")])
@@ -165,9 +169,7 @@ class OpenAlexTests(unittest.TestCase):
         )
 
         session = Mock()
-        session.get.return_value = response_for(
-            [first, second]
-        )
+        session.get.return_value = response_for([first, second])
 
         result = discover_external_researchers(
             ["Machine Learning"],
@@ -182,9 +184,7 @@ class OpenAlexTests(unittest.TestCase):
 
     def test_raw_orcid_is_not_trusted_as_primary(self):
         record = work(303, [(3, "Researcher Three")])
-        record["authorships"][0]["raw_orcid"] = (
-            "0000-0002-1825-0097"
-        )
+        record["authorships"][0]["raw_orcid"] = "0000-0002-1825-0097"
 
         session = Mock()
         session.get.return_value = response_for([record])

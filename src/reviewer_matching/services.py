@@ -19,12 +19,8 @@ def get_internal_matches(article, editor, limit=20):
         )
     )
 
-    author_ids = {
-        row["author_id"] for row in authors if row["author_id"]
-    }
-    author_ids.update(
-        article.author_accounts.values_list("pk", flat=True)
-    )
+    author_ids = {row["author_id"] for row in authors if row["author_id"]}
+    author_ids.update(article.author_accounts.values_list("pk", flat=True))
 
     author_emails = {
         row["frozen_email"].strip()
@@ -48,33 +44,33 @@ def get_internal_matches(article, editor, limit=20):
 
     results = []
     for reviewer in reviewers.distinct():
-        interests = sorted({
-            interest.name.strip()
-            for interest in reviewer.interest.all()
-            if interest.name and interest.name.strip()
-        })
-
-        matched = sorted(
-            interest for interest in interests
-            if interest.casefold() in keywords
+        interests = sorted(
+            {
+                interest.name.strip()
+                for interest in reviewer.interest.all()
+                if interest.name and interest.name.strip()
+            }
         )
 
-        results.append({
-            "account_id": reviewer.pk,
-            "name": reviewer.full_name(),
-            "source": "janeway",
-            "research_interests": interests,
-            "matched_keywords": matched,
-            "active_reviews": getattr(
-                reviewer, "active_reviews_count", None
-            ),
-            "expertise_evidence": (
-                "exact_keyword_overlap" if matched
-                else "insufficient_evidence"
-            ),
-            "coi_status": "not_fully_checked",
-            "invitation_ready": False,
-        })
+        matched = sorted(
+            interest for interest in interests if interest.casefold() in keywords
+        )
+
+        results.append(
+            {
+                "account_id": reviewer.pk,
+                "name": reviewer.full_name(),
+                "source": "janeway",
+                "research_interests": interests,
+                "matched_keywords": matched,
+                "active_reviews": getattr(reviewer, "active_reviews_count", None),
+                "expertise_evidence": (
+                    "exact_keyword_overlap" if matched else "insufficient_evidence"
+                ),
+                "coi_status": "not_fully_checked",
+                "invitation_ready": False,
+            }
+        )
 
     ranked = rank_internal(results)
     return ranked[:limit]

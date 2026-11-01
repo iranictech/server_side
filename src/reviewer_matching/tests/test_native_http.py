@@ -32,7 +32,6 @@ from utils.install import update_settings
     REVIEWER_MATCHING_ALLOW_ORCID_EMAIL_REQUESTS=False,
 )
 class NativeReviewerMatchingHTTPTests(TestCase):
-
     @classmethod
     def setUpTestData(cls):
         update_settings()
@@ -122,12 +121,9 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         from reviewer_matching import api, views
 
         targets = {
-            "reviewer_matching_native_internal":
-                api.internal_reviewer_matches,
-            "reviewer_matching_native_combined":
-                api.combined_reviewer_matches,
-            "reviewer_matching_native_suggestions":
-                views.suggestions_page,
+            "reviewer_matching_native_internal": api.internal_reviewer_matches,
+            "reviewer_matching_native_combined": api.combined_reviewer_matches,
+            "reviewer_matching_native_suggestions": views.suggestions_page,
         }
 
         for name, handler in targets.items():
@@ -140,9 +136,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "reviewer_matching.views.get_internal_matches",
             return_value=[],
         ) as service:
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Suggested Reviewers")
@@ -153,9 +147,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "reviewer_matching.api.get_internal_matches",
             return_value=[],
         ) as service:
-            response = self.client.get(
-                self.url("reviewer_matching_native_internal")
-            )
+            response = self.client.get(self.url("reviewer_matching_native_internal"))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["count"], 0)
@@ -176,12 +168,8 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["journal"], "rma")
         service.assert_called_once()
-        self.assertFalse(
-            service.call_args.kwargs["allow_external"]
-        )
-        self.assertFalse(
-            service.call_args.kwargs["allow_orcid_email"]
-        )
+        self.assertFalse(service.call_args.kwargs["allow_external"])
+        self.assertFalse(service.call_args.kwargs["allow_orcid_email"])
 
     def test_other_journal_article_returns_404(self):
         for name in (
@@ -189,9 +177,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "reviewer_matching_native_internal",
         ):
             with self.subTest(name=name):
-                response = self.client.get(
-                    self.url(name, self.article_b)
-                )
+                response = self.client.get(self.url(name, self.article_b))
                 self.assertEqual(response.status_code, 404)
 
         response = self.client.post(
@@ -226,9 +212,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_anonymous_user_cannot_access_page(self):
         self.client.logout()
 
-        response = self.client.get(
-            self.url("reviewer_matching_native_suggestions")
-        )
+        response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertNotEqual(response.status_code, 200)
 
@@ -260,17 +244,12 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_api_http_methods_are_restricted(self):
-        post_response = self.client.post(
-            self.url("reviewer_matching_native_internal")
-        )
+        post_response = self.client.post(self.url("reviewer_matching_native_internal"))
 
-        get_response = self.client.get(
-            self.url("reviewer_matching_native_combined")
-        )
+        get_response = self.client.get(self.url("reviewer_matching_native_combined"))
 
         self.assertEqual(post_response.status_code, 405)
         self.assertEqual(get_response.status_code, 405)
-
 
     def test_editor_page_renders_candidate_fields(self):
         candidate = {
@@ -292,9 +271,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "reviewer_matching.views.get_internal_matches",
             return_value=[candidate],
         ) as service:
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Dr. Example Researcher")
@@ -317,9 +294,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "reviewer_matching.views.get_internal_matches",
             return_value=[candidate],
         ):
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
 
@@ -331,20 +306,16 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertContains(response, "Unknown")
 
     def test_native_template_is_used(self):
-        template = get_template(
-            "reviewer_matching/suggestions.html"
-        )
+        template = get_template("reviewer_matching/suggestions.html")
 
         expected = (
-            Path(settings.BASE_DIR)
-            / "templates/reviewer_matching/suggestions.html"
+            Path(settings.BASE_DIR) / "templates/reviewer_matching/suggestions.html"
         )
 
         self.assertEqual(
             Path(template.origin.name).resolve(),
             expected.resolve(),
         )
-
 
     def test_real_reviewer_orm_to_html_pipeline(self):
         """Verify real ORM selection, matching, rendering and exclusion."""
@@ -360,9 +331,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         )
         self.article_a.keywords.add(keyword)
 
-        interest_model = Account._meta.get_field(
-            "interest"
-        ).remote_field.model
+        interest_model = Account._meta.get_field("interest").remote_field.model
 
         interest, _ = interest_model.objects.get_or_create(
             name=keyword_text,
@@ -415,10 +384,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertIn(eligible.pk, ids)
         self.assertNotIn(other_journal.pk, ids)
 
-        selected = next(
-            row for row in matches
-            if row["account_id"] == eligible.pk
-        )
+        selected = next(row for row in matches if row["account_id"] == eligible.pk)
 
         self.assertIn(
             keyword_text,
@@ -435,9 +401,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertFalse(selected["invitation_ready"])
 
         # Real HTTP request, without mocking the matching service.
-        response = self.client.get(
-            self.url("reviewer_matching_native_suggestions")
-        )
+        response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
@@ -479,16 +443,13 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             eligible.full_name(),
         )
 
-
     def test_article_topics_require_explicit_approval(self):
         import json
         from unittest.mock import patch
 
         payload = {"use_article_keywords": True}
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),
@@ -544,9 +505,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "public_topics": ["Unrelated Topic"],
         }
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),
@@ -567,9 +526,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "public_topics_approved": True,
         }
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),
@@ -579,16 +536,13 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertEqual(response.status_code, 400)
         builder.assert_not_called()
 
-
     def test_external_ui_disabled_by_default(self):
         keyword, _ = self.article_a.keywords.model.objects.get_or_create(
             word="Fuzzy Logic",
         )
         self.article_a.keywords.add(keyword)
 
-        response = self.client.get(
-            self.url("reviewer_matching_native_suggestions")
-        )
+        response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
@@ -606,12 +560,8 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         )
         self.article_a.keywords.add(keyword)
 
-        with override_settings(
-            REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True
-        ):
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+        with override_settings(REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True):
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Fuzzy Logic")
@@ -625,12 +575,8 @@ class NativeReviewerMatchingHTTPTests(TestCase):
 
         self.assertFalse(self.article_a.keywords.exists())
 
-        with override_settings(
-            REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True
-        ):
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+        with override_settings(REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True):
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
@@ -649,24 +595,17 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.article_a.keywords.add(keyword)
 
         with (
-            override_settings(
-                REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True
-            ),
+            override_settings(REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True),
             patch(
                 "reviewer_matching.combined.discover_external_researchers"
             ) as discovery,
-            patch(
-                "reviewer_matching.combined.fetch_public_email"
-            ) as email_lookup,
+            patch("reviewer_matching.combined.fetch_public_email") as email_lookup,
         ):
-            response = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+            response = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(response.status_code, 200)
         discovery.assert_not_called()
         email_lookup.assert_not_called()
-
 
     def test_article_topics_require_approved_snapshot(self):
         import json
@@ -682,9 +621,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "public_topics_approved": True,
         }
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),
@@ -706,12 +643,8 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         )
         self.article_a.keywords.add(first)
 
-        with override_settings(
-            REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True
-        ):
-            preview = self.client.get(
-                self.url("reviewer_matching_native_suggestions")
-            )
+        with override_settings(REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS=True):
+            preview = self.client.get(self.url("reviewer_matching_native_suggestions"))
 
         self.assertEqual(preview.status_code, 200)
         self.assertContains(preview, "Fuzzy Logic")
@@ -727,9 +660,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "approved_article_topics": ["Fuzzy Logic"],
         }
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),
@@ -754,9 +685,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "approved_article_topics": ["Unrelated Research"],
         }
 
-        with patch(
-            "reviewer_matching.api.build_combined_matches"
-        ) as builder:
+        with patch("reviewer_matching.api.build_combined_matches") as builder:
             response = self.client.post(
                 self.url("reviewer_matching_native_combined"),
                 data=json.dumps(payload),

@@ -40,21 +40,21 @@ def internal_reviewer_matches(request, article_id):
             status=400,
         )
 
-    matches = get_internal_matches(
-        article, request.user, limit=limit
-    )
+    matches = get_internal_matches(article, request.user, limit=limit)
 
-    return JsonResponse({
-        "article_id": article.pk,
-        "journal": journal.code,
-        "source": "internal",
-        "matching_method": "keyword_and_workload",
-        "semantic_matching_enabled": False,
-        "automatic_invitation": False,
-        "coi_screening_complete": False,
-        "count": len(matches),
-        "candidates": matches,
-    })
+    return JsonResponse(
+        {
+            "article_id": article.pk,
+            "journal": journal.code,
+            "source": "internal",
+            "matching_method": "keyword_and_workload",
+            "semantic_matching_enabled": False,
+            "automatic_invitation": False,
+            "coi_screening_complete": False,
+            "count": len(matches),
+            "candidates": matches,
+        }
+    )
 
 
 # Combined reviewer matching.
@@ -75,9 +75,7 @@ def _positive_limit(payload, name, default, maximum):
     value = payload.get(name, default)
 
     if type(value) is not int or not 1 <= value <= maximum:
-        raise ValueError(
-            f"{name} must be an integer between 1 and {maximum}"
-        )
+        raise ValueError(f"{name} must be an integer between 1 and {maximum}")
 
     return value
 
@@ -125,9 +123,7 @@ def combined_reviewer_matches(request, article_id):
                 raise ValueError("use_article_keywords must be true.")
 
             if "public_topics" in payload:
-                raise ValueError(
-                    "Manual topics cannot accompany article keywords."
-                )
+                raise ValueError("Manual topics cannot accompany article keywords.")
 
             if payload.get("public_topics_approved") is not True:
                 return JsonResponse(
@@ -138,9 +134,7 @@ def combined_reviewer_matches(request, article_id):
             current_topics = propose_article_topics(article)
 
             if not current_topics:
-                raise ValueError(
-                    "No eligible article keywords are available."
-                )
+                raise ValueError("No eligible article keywords are available.")
 
             approved_topics = payload.get("approved_article_topics")
 
@@ -175,12 +169,8 @@ def combined_reviewer_matches(request, article_id):
                 raise ValueError("Invalid public_topics")
             topics = []
 
-        internal_limit = _positive_limit(
-            payload, "internal_limit", 20, 100
-        )
-        external_limit = _positive_limit(
-            payload, "external_limit", 15, 30
-        )
+        internal_limit = _positive_limit(payload, "internal_limit", 20, 100)
+        external_limit = _positive_limit(payload, "external_limit", 15, 30)
 
     except ValueError as exc:
         return JsonResponse({"error": str(exc)}, status=400)

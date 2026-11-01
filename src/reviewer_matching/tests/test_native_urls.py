@@ -11,7 +11,6 @@ from reviewer_matching.api import (
 
 @override_settings(ROOT_URLCONF="review.urls")
 class NativeReviewerMatchingURLTests(SimpleTestCase):
-
     def test_internal_route(self):
         url = reverse(
             "reviewer_matching_native_internal",
@@ -49,9 +48,7 @@ class NativeReviewerMatchingURLTests(SimpleTestCase):
             "/manager/reviewer-matching/article/123/internal/"
         )
 
-        response = internal_reviewer_matches(
-            request, article_id="123"
-        )
+        response = internal_reviewer_matches(request, article_id="123")
 
         self.assertEqual(response.status_code, 405)
 
@@ -60,8 +57,6 @@ class NativeReviewerMatchingURLTests(SimpleTestCase):
             "/manager/reviewer-matching/article/123/combined/"
         )
 
-        response = combined_reviewer_matches(
-            request, article_id="123"
-        )
+        response = combined_reviewer_matches(request, article_id="123")
 
         self.assertEqual(response.status_code, 405)

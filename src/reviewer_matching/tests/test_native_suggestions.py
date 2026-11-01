@@ -16,7 +16,6 @@ from reviewer_matching.views import suggestions_page
 
 @override_settings(ROOT_URLCONF="review.urls")
 class NativeSuggestionsTests(SimpleTestCase):
-
     def test_native_page_url(self):
         url = reverse(
             "reviewer_matching_native_suggestions",
@@ -40,9 +39,7 @@ class NativeSuggestionsTests(SimpleTestCase):
             suggestions_page(request, article_id="123")
 
     def test_native_template_discoverable(self):
-        result = get_template(
-            "reviewer_matching/suggestions.html"
-        )
+        result = get_template("reviewer_matching/suggestions.html")
         self.assertIsNotNone(result)
 
     def test_editorial_button_present(self):

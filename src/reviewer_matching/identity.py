@@ -61,32 +61,21 @@ def resolve_janeway_orcid(article, value):
         article=article,
     ).values_list("frozen_orcid", flat=True)
 
-    if any(
-        normalize_orcid(item) == identifier
-        for item in frozen_orcids
-    ):
+    if any(normalize_orcid(item) == identifier for item in frozen_orcids):
         return "article_author"
 
-    linked_author_orcids = article.author_accounts.values_list(
-        "orcid", flat=True
-    )
+    linked_author_orcids = article.author_accounts.values_list("orcid", flat=True)
 
-    if any(
-        normalize_orcid(item) == identifier
-        for item in linked_author_orcids
-    ):
+    if any(normalize_orcid(item) == identifier for item in linked_author_orcids):
         return "article_author"
 
     # The substring filter narrows the candidates. Exact canonical
     # comparison prevents treating partial matches as identical.
-    existing_orcids = Account.objects.filter(
-        orcid__icontains=identifier
-    ).values_list("orcid", flat=True)
+    existing_orcids = Account.objects.filter(orcid__icontains=identifier).values_list(
+        "orcid", flat=True
+    )
 
-    if any(
-        normalize_orcid(item) == identifier
-        for item in existing_orcids
-    ):
+    if any(normalize_orcid(item) == identifier for item in existing_orcids):
         return "existing_janeway_account"
 
     return "new_external"

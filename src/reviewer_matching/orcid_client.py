@@ -116,9 +116,7 @@ def fetch_public_email(
         ):
             continue
 
-        verified_public.append(
-            (item.get("primary") is True, address)
-        )
+        verified_public.append((item.get("primary") is True, address))
 
     if not verified_public:
         result["status"] = "not_public"

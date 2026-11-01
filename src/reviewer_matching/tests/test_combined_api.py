@@ -14,7 +14,6 @@ from reviewer_matching.api import combined_reviewer_matches
 
 
 class CombinedAPITests(unittest.TestCase):
-
     def setUp(self):
         self.factory = RequestFactory()
         self.journal = SimpleNamespace(code="ua")
@@ -37,9 +36,7 @@ class CombinedAPITests(unittest.TestCase):
             has_senior_editor_role=lambda request: editor,
             is_journal_manager=lambda journal: False,
             is_section_editor=lambda request: False,
-            accountrole_set=SimpleNamespace(
-                filter=lambda **kwargs: []
-            ),
+            accountrole_set=SimpleNamespace(filter=lambda **kwargs: []),
         )
 
     def make_request(self, payload, *, editor=True):
@@ -76,9 +73,7 @@ class CombinedAPITests(unittest.TestCase):
                 return_value=result,
             ) as matching,
         ):
-            response = combined_reviewer_matches(
-                request, article_id=123
-            )
+            response = combined_reviewer_matches(request, article_id=123)
             return response, matching.call_count
 
     def test_url_resolves(self):
@@ -110,10 +105,12 @@ class CombinedAPITests(unittest.TestCase):
             )
 
     def test_authorized_editor(self):
-        request = self.make_request({
-            "public_topics": ["Fuzzy Logic"],
-            "public_topics_approved": True,
-        })
+        request = self.make_request(
+            {
+                "public_topics": ["Fuzzy Logic"],
+                "public_topics_approved": True,
+            }
+        )
 
         response, calls = self.invoke(request)
 
@@ -160,10 +157,12 @@ class CombinedAPITests(unittest.TestCase):
             self.invoke(request, article=article)
 
     def test_public_topics_need_approval(self):
-        request = self.make_request({
-            "public_topics": ["Machine Learning"],
-            "public_topics_approved": False,
-        })
+        request = self.make_request(
+            {
+                "public_topics": ["Machine Learning"],
+                "public_topics_approved": False,
+            }
+        )
 
         response, calls = self.invoke(request)
 
@@ -171,10 +170,12 @@ class CombinedAPITests(unittest.TestCase):
         self.assertEqual(calls, 0)
 
     def test_invalid_limit(self):
-        request = self.make_request({
-            "public_topics": [],
-            "internal_limit": 5000,
-        })
+        request = self.make_request(
+            {
+                "public_topics": [],
+                "internal_limit": 5000,
+            }
+        )
 
         response, calls = self.invoke(request)
 

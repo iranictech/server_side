@@ -23,7 +23,6 @@ urlpatterns = [
         native_reviewer_suggestions,
         name="reviewer_matching_native_suggestions",
     ),
-
     # Native Django Reviewer Matching API (independent of plugin activation)
     re_path(
         r"^manager/reviewer-matching/article/(?P<article_id>\d+)/internal/$",
@@ -35,8 +34,6 @@ urlpatterns = [
         native_combined_reviewer_matches,
         name="reviewer_matching_native_combined",
     ),
-
-
     re_path(r"^$", views.home, name="review_home"),
     re_path(r"^unassigned/$", views.unassigned, name="review_unassigned"),
     re_path(

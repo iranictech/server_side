@@ -10,8 +10,11 @@ from django.test import RequestFactory, TestCase
 from core.models import Account, AccountRole, Role, XSLFile
 from journal.models import Journal
 from submission.models import (
-    Article, FrozenAuthor, STAGE_UNDER_REVIEW,
-    STAGE_ACCEPTED, STAGE_UNASSIGNED,
+    Article,
+    FrozenAuthor,
+    STAGE_UNDER_REVIEW,
+    STAGE_ACCEPTED,
+    STAGE_UNASSIGNED,
 )
 from review.models import EditorAssignment, EditorOverride
 
@@ -108,10 +111,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         if payload is None:
             payload = {"public_topics": []}
 
-        path = (
-            f"/review/manager/reviewer-matches/"
-            f"{article_id}/combined/"
-        )
+        path = f"/review/manager/reviewer-matches/{article_id}/combined/"
 
         request = self.factory.post(
             path,
@@ -127,12 +127,15 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         return request
 
     def invoke(self, request, article_id):
-        with patch(
-            "reviewer_matching.combined.get_internal_matches",
-            return_value=[],
-        ), patch(
-            "reviewer_matching.combined.discover_external_researchers"
-        ) as external:
+        with (
+            patch(
+                "reviewer_matching.combined.get_internal_matches",
+                return_value=[],
+            ),
+            patch(
+                "reviewer_matching.combined.discover_external_researchers"
+            ) as external,
+        ):
             try:
                 response = combined_reviewer_matches(
                     request,
@@ -149,9 +152,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             self.article_a.pk,
         )
 
-        self.assertTrue(
-            self.editor_a.has_senior_editor_role(request)
-        )
+        self.assertTrue(self.editor_a.has_senior_editor_role(request))
 
     def test_authorized_editor_can_access_own_journal(self):
         request = self.make_request(
@@ -242,12 +243,8 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             "disabled",
         )
 
-    def make_internal_request(
-        self, user, journal, article_id, active_role=None
-    ):
-        request = self.factory.get(
-            f"/review/manager/reviewer-matches/{article_id}/"
-        )
+    def make_internal_request(self, user, journal, article_id, active_role=None):
+        request = self.factory.get(f"/review/manager/reviewer-matches/{article_id}/")
         request.user = user
         request.journal = journal
         request.active_role_slug = active_role
@@ -264,13 +261,9 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             journal=self.journal_a,
             role=role,
         )
-        request = self.make_request(
-            self.editor_a, self.journal_a, self.article_a.pk
-        )
+        request = self.make_request(self.editor_a, self.journal_a, self.article_a.pk)
         request.active_role_slug = "editor-in-chief"
-        self.assertTrue(
-            self.editor_a.has_senior_editor_role(request)
-        )
+        self.assertTrue(self.editor_a.has_senior_editor_role(request))
         self.assertEqual(
             self.invoke(request, self.article_a.pk).status_code,
             200,
@@ -286,9 +279,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             journal=self.journal_a,
             role=role,
         )
-        request = self.make_request(
-            self.editor_a, self.journal_a, self.article_a.pk
-        )
+        request = self.make_request(self.editor_a, self.journal_a, self.article_a.pk)
         request.active_role_slug = "reviewer"
         with self.assertRaises(PermissionDenied):
             self.invoke(request, self.article_a.pk)
@@ -308,9 +299,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             editor=self.editor_b,
             editor_type="section-editor",
         )
-        request = self.make_request(
-            self.editor_b, self.journal_a, self.article_a.pk
-        )
+        request = self.make_request(self.editor_b, self.journal_a, self.article_a.pk)
         request.active_role_slug = "section-editor"
         self.assertEqual(
             self.invoke(request, self.article_a.pk).status_code,
@@ -327,9 +316,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             journal=self.journal_a,
             role=role,
         )
-        request = self.make_request(
-            self.editor_b, self.journal_a, self.article_a.pk
-        )
+        request = self.make_request(self.editor_b, self.journal_a, self.article_a.pk)
         request.active_role_slug = "section-editor"
         with self.assertRaises(PermissionDenied):
             self.invoke(request, self.article_a.pk)
@@ -357,13 +344,9 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             self.author_article.pk,
             "editor",
         )
-        with patch(
-            "reviewer_matching.api.get_internal_matches"
-        ) as service:
+        with patch("reviewer_matching.api.get_internal_matches") as service:
             with self.assertRaises(PermissionDenied):
-                internal_reviewer_matches(
-                    request, article_id=self.author_article.pk
-                )
+                internal_reviewer_matches(request, article_id=self.author_article.pk)
             service.assert_not_called()
 
     def test_internal_author_with_override_allowed(self):
@@ -395,27 +378,17 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             "editor",
         )
         with self.assertRaises(Http404):
-            internal_reviewer_matches(
-                request, article_id=self.article_b.pk
-            )
+            internal_reviewer_matches(request, article_id=self.article_b.pk)
 
     def test_accepted_article_denies_combined(self):
-        Article.objects.filter(pk=self.article_a.pk).update(
-            stage=STAGE_ACCEPTED
-        )
-        request = self.make_request(
-            self.editor_a, self.journal_a, self.article_a.pk
-        )
+        Article.objects.filter(pk=self.article_a.pk).update(stage=STAGE_ACCEPTED)
+        request = self.make_request(self.editor_a, self.journal_a, self.article_a.pk)
         with self.assertRaises(PermissionDenied):
             self.invoke(request, self.article_a.pk)
 
     def test_unassigned_article_denies_combined(self):
-        Article.objects.filter(pk=self.article_a.pk).update(
-            stage=STAGE_UNASSIGNED
-        )
-        request = self.make_request(
-            self.editor_a, self.journal_a, self.article_a.pk
-        )
+        Article.objects.filter(pk=self.article_a.pk).update(stage=STAGE_UNASSIGNED)
+        request = self.make_request(self.editor_a, self.journal_a, self.article_a.pk)
         with self.assertRaises(PermissionDenied):
             self.invoke(request, self.article_a.pk)
 
@@ -435,24 +408,16 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             self.article_a.pk,
             "reviewer",
         )
-        with patch(
-            "reviewer_matching.api.get_internal_matches"
-        ) as service:
+        with patch("reviewer_matching.api.get_internal_matches") as service:
             with self.assertRaises(PermissionDenied):
-                internal_reviewer_matches(
-                    request, article_id=self.article_a.pk
-                )
+                internal_reviewer_matches(request, article_id=self.article_a.pk)
             service.assert_not_called()
 
     def test_frozen_author_orcid_match(self):
         FrozenAuthor.objects.filter(
             article=self.author_article,
             author=self.author_editor,
-        ).update(
-            frozen_orcid=(
-                "https://orcid.org/0000-0002-1825-0097/"
-            )
-        )
+        ).update(frozen_orcid=("https://orcid.org/0000-0002-1825-0097/"))
 
         self.assertEqual(
             resolve_janeway_orcid(
@@ -463,9 +428,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         )
 
     def test_linked_author_account_orcid_match(self):
-        self.author_editor.orcid = (
-            "https://orcid.org/0000-0002-1825-0097"
-        )
+        self.author_editor.orcid = "https://orcid.org/0000-0002-1825-0097"
         self.author_editor.save(update_fields=["orcid"])
 
         self.assertEqual(
@@ -477,9 +440,7 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         )
 
     def test_existing_janeway_account_orcid_match(self):
-        self.reader.orcid = (
-            "https://orcid.org/0000-0002-1825-0097"
-        )
+        self.reader.orcid = "https://orcid.org/0000-0002-1825-0097"
         self.reader.save(update_fields=["orcid"])
 
         self.assertEqual(
@@ -507,22 +468,28 @@ class ReviewerMatchingORMPermissionTests(TestCase):
             author=self.author_editor,
         ).update(frozen_orcid=identifier)
 
-        candidates = [{
-            "openalex_id": "A900",
-            "name": "Excluded Author",
-            "orcid": identifier,
-            "orcid_status": "available",
-        }]
+        candidates = [
+            {
+                "openalex_id": "A900",
+                "name": "Excluded Author",
+                "orcid": identifier,
+                "orcid_status": "available",
+            }
+        ]
 
-        with patch(
-            "reviewer_matching.combined.get_internal_matches",
-            return_value=[],
-        ), patch(
-            "reviewer_matching.combined.discover_external_researchers",
-            return_value=candidates,
-        ), patch(
-            "reviewer_matching.combined.fetch_public_email",
-        ) as email_service:
+        with (
+            patch(
+                "reviewer_matching.combined.get_internal_matches",
+                return_value=[],
+            ),
+            patch(
+                "reviewer_matching.combined.discover_external_researchers",
+                return_value=candidates,
+            ),
+            patch(
+                "reviewer_matching.combined.fetch_public_email",
+            ) as email_service,
+        ):
             result = build_combined_matches(
                 self.author_article,
                 self.editor_a,
@@ -541,22 +508,28 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         self.reader.orcid = f"https://orcid.org/{identifier}"
         self.reader.save(update_fields=["orcid"])
 
-        candidates = [{
-            "openalex_id": "A901",
-            "name": "Existing Researcher",
-            "orcid": identifier,
-            "orcid_status": "available",
-        }]
+        candidates = [
+            {
+                "openalex_id": "A901",
+                "name": "Existing Researcher",
+                "orcid": identifier,
+                "orcid_status": "available",
+            }
+        ]
 
-        with patch(
-            "reviewer_matching.combined.get_internal_matches",
-            return_value=[],
-        ), patch(
-            "reviewer_matching.combined.discover_external_researchers",
-            return_value=candidates,
-        ), patch(
-            "reviewer_matching.combined.fetch_public_email",
-        ) as email_service:
+        with (
+            patch(
+                "reviewer_matching.combined.get_internal_matches",
+                return_value=[],
+            ),
+            patch(
+                "reviewer_matching.combined.discover_external_researchers",
+                return_value=candidates,
+            ),
+            patch(
+                "reviewer_matching.combined.fetch_public_email",
+            ) as email_service,
+        ):
             result = build_combined_matches(
                 self.article_a,
                 self.editor_a,
@@ -578,22 +551,28 @@ class ReviewerMatchingORMPermissionTests(TestCase):
         email_service.assert_not_called()
 
     def test_new_external_is_not_invited_or_emailed(self):
-        candidates = [{
-            "openalex_id": "A902",
-            "name": "New Researcher",
-            "orcid": "0000-0002-1825-0097",
-            "orcid_status": "available",
-        }]
+        candidates = [
+            {
+                "openalex_id": "A902",
+                "name": "New Researcher",
+                "orcid": "0000-0002-1825-0097",
+                "orcid_status": "available",
+            }
+        ]
 
-        with patch(
-            "reviewer_matching.combined.get_internal_matches",
-            return_value=[],
-        ), patch(
-            "reviewer_matching.combined.discover_external_researchers",
-            return_value=candidates,
-        ), patch(
-            "reviewer_matching.combined.fetch_public_email",
-        ) as email_service:
+        with (
+            patch(
+                "reviewer_matching.combined.get_internal_matches",
+                return_value=[],
+            ),
+            patch(
+                "reviewer_matching.combined.discover_external_researchers",
+                return_value=candidates,
+            ),
+            patch(
+                "reviewer_matching.combined.fetch_public_email",
+            ) as email_service,
+        ):
             result = build_combined_matches(
                 self.article_a,
                 self.editor_a,

@@ -12,10 +12,7 @@ class FakeReviewer:
         self.orcid = orcid
         self.active_reviews_count = load
         self.interest = SimpleNamespace(
-            all=lambda: [
-                SimpleNamespace(name=name)
-                for name in interests
-            ]
+            all=lambda: [SimpleNamespace(name=name) for name in interests]
         )
 
     def full_name(self):
@@ -34,10 +31,9 @@ class FakeQuerySet:
         field = key[:-4]
         excluded = set(values)
 
-        return FakeQuerySet([
-            item for item in self.items
-            if getattr(item, field) not in excluded
-        ])
+        return FakeQuerySet(
+            [item for item in self.items if getattr(item, field) not in excluded]
+        )
 
     def distinct(self):
         by_pk = {}
@@ -52,10 +48,7 @@ class FakeQuerySet:
 def make_article(words=(), author_ids=()):
     return SimpleNamespace(
         keywords=SimpleNamespace(
-            all=lambda: [
-                SimpleNamespace(word=word)
-                for word in words
-            ]
+            all=lambda: [SimpleNamespace(word=word) for word in words]
         ),
         author_accounts=SimpleNamespace(
             values_list=lambda *args, **kwargs: list(author_ids)
@@ -64,9 +57,7 @@ def make_article(words=(), author_ids=()):
 
 
 def execute_match(article, reviewers, frozen_authors=(), limit=20):
-    frozen_result = SimpleNamespace(
-        values=lambda *args: list(frozen_authors)
-    )
+    frozen_result = SimpleNamespace(values=lambda *args: list(frozen_authors))
 
     with (
         patch(
@@ -86,7 +77,6 @@ def execute_match(article, reviewers, frozen_authors=(), limit=20):
 
 
 class InternalReviewerServiceTests(unittest.TestCase):
-
     def test_excludes_article_author_account(self):
         article = make_article(
             words=["Artificial Intelligence"],
@@ -106,11 +96,13 @@ class InternalReviewerServiceTests(unittest.TestCase):
 
     def test_excludes_matching_author_email_and_orcid(self):
         article = make_article(words=["AI"])
-        frozen = [{
-            "author_id": None,
-            "frozen_email": "author@example.org",
-            "frozen_orcid": "0000-0001-1234-5678",
-        }]
+        frozen = [
+            {
+                "author_id": None,
+                "frozen_email": "author@example.org",
+                "frozen_orcid": "0000-0001-1234-5678",
+            }
+        ]
         reviewers = [
             FakeReviewer(1, email="author@example.org"),
             FakeReviewer(2, orcid="0000-0001-1234-5678"),

@@ -14,12 +14,9 @@ ORCID = "0000-0002-1825-0097"
 
 
 class OrcidIdentityTests(unittest.TestCase):
-
     def test_normalize_orcid_variants(self):
         self.assertEqual(
-            normalize_orcid(
-                f" https://orcid.org/{ORCID}/ "
-            ),
+            normalize_orcid(f" https://orcid.org/{ORCID}/ "),
             ORCID,
         )
         self.assertEqual(normalize_orcid(ORCID), ORCID)
@@ -42,15 +39,11 @@ class OrcidIdentityTests(unittest.TestCase):
                 "orcid": f"https://orcid.org/{ORCID}",
             }
         }
-        self.assertEqual(
-            extract_openalex_orcid(record), ORCID
-        )
+        self.assertEqual(extract_openalex_orcid(record), ORCID)
 
     def test_missing_orcid_does_not_guess(self):
         self.assertEqual(
-            extract_openalex_orcid({
-                "author": {"display_name": "Example"}
-            }),
+            extract_openalex_orcid({"author": {"display_name": "Example"}}),
             "",
         )
 
@@ -100,9 +93,7 @@ class OrcidIdentityTests(unittest.TestCase):
         )
 
         self.assertEqual(result["status"], "available")
-        self.assertEqual(
-            result["email"], "researcher@example.org"
-        )
+        self.assertEqual(result["email"], "researcher@example.org")
 
     def test_private_and_unverified_not_returned(self):
         session = Mock()

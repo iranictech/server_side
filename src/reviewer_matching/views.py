@@ -74,11 +74,13 @@ def suggestions_page(request, article_id):
         {
             "article": article,
             "candidates": candidates,
-            "external_enabled": bool(getattr(
-                settings,
-                "REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS",
-                False,
-            )),
+            "external_enabled": bool(
+                getattr(
+                    settings,
+                    "REVIEWER_MATCHING_ALLOW_EXTERNAL_REQUESTS",
+                    False,
+                )
+            ),
             "article_topics": propose_article_topics(article),
         },
     )

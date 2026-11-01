@@ -7,7 +7,6 @@ from reviewer_matching.openalex import OpenAlexDiscoveryError
 
 
 class CombinedTests(unittest.TestCase):
-
     def setUp(self):
         self.article = SimpleNamespace(pk=123)
         self.editor = SimpleNamespace(pk=50)
