@@ -21,7 +21,7 @@ class AbstractIndexingAdmin(admin.ModelAdmin):
     search_fields = (
         "name",
         "description",
-        "journal__name",
+        "journal__code",
     )
 
     ordering = (
