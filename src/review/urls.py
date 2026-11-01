@@ -8,8 +8,35 @@ from django.urls import re_path
 
 from review import views
 from review.const import EditorialDecisions
+from reviewer_matching.views import suggestions_page as native_reviewer_suggestions
+
+from reviewer_matching.api import (
+    internal_reviewer_matches as native_internal_reviewer_matches,
+    combined_reviewer_matches as native_combined_reviewer_matches,
+)
+
 
 urlpatterns = [
+    # Native Django reviewer matching page
+    re_path(
+        r"^manager/reviewer-matching/article/(?P<article_id>\d+)/suggestions/$",
+        native_reviewer_suggestions,
+        name="reviewer_matching_native_suggestions",
+    ),
+
+    # Native Django Reviewer Matching API (independent of plugin activation)
+    re_path(
+        r"^manager/reviewer-matching/article/(?P<article_id>\d+)/internal/$",
+        native_internal_reviewer_matches,
+        name="reviewer_matching_native_internal",
+    ),
+    re_path(
+        r"^manager/reviewer-matching/article/(?P<article_id>\d+)/combined/$",
+        native_combined_reviewer_matches,
+        name="reviewer_matching_native_combined",
+    ),
+
+
     re_path(r"^$", views.home, name="review_home"),
     re_path(r"^unassigned/$", views.unassigned, name="review_unassigned"),
     re_path(
