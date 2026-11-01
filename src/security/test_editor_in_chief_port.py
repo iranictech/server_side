@@ -34,8 +34,9 @@ class EditorInChiefPortTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def request(self, role="editor-in-chief", journal=None, user=None,
-                method="get", data=None):
+    def request(
+        self, role="editor-in-chief", journal=None, user=None, method="get", data=None
+    ):
         url = "/role/editor-in-chief/switch/"
         if method == "post":
             request = self.factory.post(url, data or {})
@@ -117,9 +118,7 @@ class EditorInChiefPortTests(TestCase):
     def test_middleware_selects_existing_role(self):
         request = self.request(role=None)
         request.session = {
-            "janeway_active_roles": {
-                str(self.journal_one.pk): "editor-in-chief"
-            }
+            "janeway_active_roles": {str(self.journal_one.pk): "editor-in-chief"}
         }
         ActiveRoleMiddleware.process_request(request)
         self.assertEqual(request.active_role_slug, "editor-in-chief")
@@ -127,9 +126,7 @@ class EditorInChiefPortTests(TestCase):
     def test_middleware_rejects_forged_selection(self):
         request = self.request(role=None)
         request.session = {
-            "janeway_active_roles": {
-                str(self.journal_one.pk): "journal-manager"
-            }
+            "janeway_active_roles": {str(self.journal_one.pk): "journal-manager"}
         }
         ActiveRoleMiddleware.process_request(request)
         self.assertNotEqual(request.active_role_slug, "journal-manager")
@@ -139,36 +136,28 @@ class EditorInChiefPortTests(TestCase):
         file_obj = SimpleNamespace(
             article_id=101, article=article, owner=None, privacy="editors"
         )
-        self.assertTrue(
-            can_edit_file(self.request(), self.eic, file_obj, article)
-        )
+        self.assertTrue(can_edit_file(self.request(), self.eic, file_obj, article))
 
     def test_eic_cannot_edit_file_in_other_journal(self):
         article = SimpleNamespace(pk=102, journal=self.journal_two)
         file_obj = SimpleNamespace(
             article_id=102, article=article, owner=None, privacy="editors"
         )
-        self.assertFalse(
-            can_edit_file(self.request(), self.eic, file_obj, article)
-        )
+        self.assertFalse(can_edit_file(self.request(), self.eic, file_obj, article))
 
     def test_eic_cannot_edit_mismatched_article_file(self):
         article = SimpleNamespace(pk=101, journal=self.journal_one)
         file_obj = SimpleNamespace(
             article_id=999, article=article, owner=None, privacy="editors"
         )
-        self.assertFalse(
-            can_edit_file(self.request(), self.eic, file_obj, article)
-        )
+        self.assertFalse(can_edit_file(self.request(), self.eic, file_obj, article))
 
     def test_eic_cannot_view_other_journal_private_file(self):
         article = SimpleNamespace(pk=102, journal=self.journal_two)
         file_obj = SimpleNamespace(
             article_id=102, article=article, owner=None, privacy="editors"
         )
-        self.assertFalse(
-            can_view_file(self.request(), self.eic, file_obj)
-        )
+        self.assertFalse(can_view_file(self.request(), self.eic, file_obj))
 
     def test_eic_cannot_view_private_unbound_file(self):
         file_obj = SimpleNamespace(
@@ -177,6 +166,4 @@ class EditorInChiefPortTests(TestCase):
             owner=None,
             privacy="editors",
         )
-        self.assertFalse(
-            can_view_file(self.request(), self.eic, file_obj)
-        )
+        self.assertFalse(can_view_file(self.request(), self.eic, file_obj))
