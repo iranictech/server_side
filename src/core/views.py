@@ -317,6 +317,7 @@ def switch_active_role(request, role_slug):
 
     return redirect(reverse("core_dashboard"))
 
+
 @login_required
 def user_logout(request):
     """
