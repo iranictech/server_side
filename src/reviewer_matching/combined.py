@@ -2,6 +2,7 @@
 
 from .services import get_internal_matches
 from .identity import normalize_orcid, resolve_janeway_orcid
+from .coi import get_article_author_orcids
 from .orcid_client import fetch_public_email
 from .openalex import (
     discover_external_researchers,
@@ -55,9 +56,15 @@ def build_combined_matches(
             )
             enriched = []
             duplicate_orcids = _possible_duplicate_orcids(external)
+            author_orcids = (
+                get_article_author_orcids(article)
+                if any(item.get("sampled_coauthor_orcids") for item in external)
+                else set()
+            )
 
             for candidate in external:
                 item = dict(candidate)
+                coauthor_orcids = item.pop("sampled_coauthor_orcids", [])
 
                 orcid = normalize_orcid(item.get("orcid"))
 
@@ -85,6 +92,18 @@ def build_combined_matches(
                     if item["possible_duplicate"]
                     else []
                 )
+                # Positive evidence only: absence cannot clear a COI.
+                item["potential_coauthorship_coi"] = bool(
+                    author_orcids.intersection(
+                        normalize_orcid(value) for value in coauthor_orcids
+                    )
+                )
+                item["coi_status"] = (
+                    "potential_coauthorship"
+                    if item["potential_coauthorship_coi"]
+                    else "not_checked"
+                )
+                item["coi_screening_complete"] = False
                 item["identity_verified"] = False
                 item["email"] = None
                 item["email_source"] = None
@@ -98,6 +117,8 @@ def build_combined_matches(
 
                     if item["possible_duplicate"]:
                         item["email_status"] = "manual_identity_review_required"
+                    elif item["potential_coauthorship_coi"]:
+                        item["email_status"] = "manual_coi_review_required"
                     elif allow_orcid_email:
                         # Bound synchronous network calls.
                         # A queued lookup service can replace this later.
@@ -137,6 +158,9 @@ def build_combined_matches(
         "excluded_article_authors": excluded_article_authors,
         "possible_duplicate_external_records": sum(
             item["possible_duplicate"] for item in external
+        ),
+        "potential_coauthorship_coi_records": sum(
+            item["potential_coauthorship_coi"] for item in external
         ),
         "orcid_email_lookup_enabled": bool(allow_external and allow_orcid_email),
         "counts": {

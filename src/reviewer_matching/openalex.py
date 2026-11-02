@@ -183,6 +183,20 @@ def discover_external_researchers(
                 if not isinstance(authorships, list):
                     continue
 
+                # Public, work-specific author identifiers only. This is
+                # not a complete co-authorship record for any researcher.
+                sampled_authors = []
+                for authorship in authorships:
+                    if not isinstance(authorship, dict):
+                        continue
+                    author = authorship.get("author")
+                    if not isinstance(author, dict):
+                        continue
+                    sampled_id = _extract_id(author.get("id"), AUTHOR_ID_RE)
+                    sampled_orcid = extract_openalex_orcid(authorship)
+                    if sampled_id and sampled_orcid:
+                        sampled_authors.append((sampled_id, sampled_orcid))
+
                 for authorship in authorships:
                     if not isinstance(authorship, dict):
                         continue
@@ -211,6 +225,7 @@ def discover_external_researchers(
                             "matched_public_topics": set(),
                             "evidence_work_ids": set(),
                             "sampled_publication_years": set(),
+                            "sampled_coauthor_orcids": set(),
                             "orcid_candidates": set(),
                         },
                     )
@@ -221,6 +236,11 @@ def discover_external_researchers(
 
                     record["matched_public_topics"].add(topic)
                     record["evidence_work_ids"].add(work_id)
+                    record["sampled_coauthor_orcids"].update(
+                        coauthor_orcid
+                        for coauthor_id, coauthor_orcid in sampled_authors
+                        if coauthor_id != author_id
+                    )
                     if publication_year is not None:
                         record["sampled_publication_years"].add(publication_year)
 
@@ -255,6 +275,9 @@ def discover_external_researchers(
                 "matched_public_topics": sorted(record["matched_public_topics"]),
                 "matching_works_count": len(works),
                 "evidence_work_ids": works,
+                # Internal evidence: stripped by the combined endpoint before
+                # responding to editors. Never identify manuscript authors here.
+                "sampled_coauthor_orcids": sorted(record["sampled_coauthor_orcids"]),
                 # Only the searched works are sampled: not a full researcher history.
                 "latest_sampled_publication_year": max(years) if years else None,
                 "activity_status": "not_assessed",
