@@ -806,3 +806,38 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_editorial_coi_html_form_redirects_and_escapes_rationale(self):
+        role, _ = Role.objects.get_or_create(
+            slug="reviewer", defaults={"name": "Reviewer"}
+        )
+        reviewer = Account.objects.create(
+            username="coi_html_reviewer",
+            email="coi_html_reviewer@example.org",
+            first_name="COI",
+            last_name="Reviewer",
+            is_active=True,
+        )
+        AccountRole.objects.create(user=reviewer, journal=self.journal_a, role=role)
+
+        rationale = "Editor checked affiliations <script>alert(1)</script>"
+        result = self.client.post(
+            self.url("reviewer_matching_native_coi_assessment"),
+            {
+                "reviewer_id": reviewer.pk,
+                "status": "uncertain",
+                "rationale": rationale,
+            },
+            HTTP_ACCEPT="text/html",
+        )
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(
+            result.url,
+            self.url("reviewer_matching_native_suggestions"),
+        )
+
+        page = self.client.get(self.url("reviewer_matching_native_suggestions"))
+        self.assertContains(page, "Last editorial COI decision")
+        self.assertContains(page, "uncertain")
+        self.assertContains(page, "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertNotContains(page, "<script>alert(1)</script>")
