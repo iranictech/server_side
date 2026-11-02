@@ -75,3 +75,15 @@ class NativeSuggestionsTests(SimpleTestCase):
         self.assertIn("Latest Year in Sample", source)
         self.assertIn("candidate.latest_sampled_publication_year", source)
         self.assertIn("not a complete publication history", source)
+
+    def test_manual_coi_review_and_work_evidence_visible(self):
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "templates/reviewer_matching/suggestions.html"
+        )
+        source = path.read_text(encoding="utf-8")
+
+        self.assertIn("COI Evidence", source)
+        self.assertIn("candidate.coauthorship_evidence_work_ids", source)
+        self.assertIn("potential_coauthorship_conflict", source)
+        self.assertIn("missing evidence does not", source)

@@ -253,6 +253,42 @@ class OpenAlexTests(unittest.TestCase):
         self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
         self.assertEqual(result[0]["activity_status"], "not_assessed")
 
+    def test_public_coauthor_orcid_evidence_uses_same_sampled_work(self):
+        record = work(701, [(10, "Candidate"), (11, "Manuscript Author")])
+        record["authorships"][0]["author"]["orcid"] = "0000-0002-1825-0097"
+        record["authorships"][1]["author"]["orcid"] = (
+            "https://orcid.org/0000-0001-2345-6789"
+        )
+        session = Mock()
+        session.get.return_value = response_for([record])
+
+        result = discover_external_researchers(
+            ["Machine Learning"],
+            session=session,
+        )
+
+        candidate = next(row for row in result if row["openalex_id"] == "A10")
+        self.assertEqual(
+            candidate["_coauthor_orcid_work_ids"],
+            {"0000-0001-2345-6789": ["W701"]},
+        )
+        self.assertFalse(candidate["invitation_ready"])
+        self.assertEqual(session.get.call_count, 1)
+
+    def test_unverified_raw_orcid_cannot_create_coauthor_evidence(self):
+        record = work(702, [(10, "Candidate"), (11, "Author")])
+        record["authorships"][1]["raw_orcid"] = "0000-0001-2345-6789"
+        session = Mock()
+        session.get.return_value = response_for([record])
+
+        result = discover_external_researchers(
+            ["Statistics"],
+            session=session,
+        )
+
+        candidate = next(row for row in result if row["openalex_id"] == "A10")
+        self.assertEqual(candidate["_coauthor_orcid_work_ids"], {})
+
 
 if __name__ == "__main__":
     unittest.main()
