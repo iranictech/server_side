@@ -75,3 +75,14 @@ class NativeSuggestionsTests(SimpleTestCase):
         self.assertIn("Latest Year in Sample", source)
         self.assertIn("candidate.latest_sampled_publication_year", source)
         self.assertIn("not a complete publication history", source)
+
+    def test_possible_coauthorship_warning_is_in_editorial_template(self):
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "templates/reviewer_matching/suggestions.html"
+        )
+        source = path.read_text(encoding="utf-8")
+
+        self.assertIn("candidate.potential_coauthorship_coi", source)
+        self.assertIn("manual COI review required", source)
+        self.assertIn("does not rule out conflicts of interest", source)

@@ -271,3 +271,85 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
             [item["possible_duplicate"] for item in result["results"]["external"]],
             [False, False],
         )
+
+    @patch("reviewer_matching.combined.fetch_public_email")
+    @patch(
+        "reviewer_matching.combined.get_article_author_orcids",
+        return_value={"0000-0002-1825-0003"},
+    )
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_sampled_article_coauthorship_warns_without_email_lookup(
+        self, internal, discovery, resolver, author_orcids, email
+    ):
+        discovery.return_value = [
+            {
+                **self.candidate(),
+                "sampled_coauthor_orcids": ["0000-0002-1825-0003"],
+            }
+        ]
+
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+            allow_orcid_email=True,
+        )
+        candidate = result["results"]["external"][0]
+
+        self.assertTrue(candidate["potential_coauthorship_coi"])
+        self.assertEqual(candidate["coi_status"], "potential_coauthorship")
+        self.assertFalse(candidate["coi_screening_complete"])
+        self.assertFalse(candidate["invitation_ready"])
+        self.assertEqual(candidate["email_status"], "manual_coi_review_required")
+        self.assertNotIn("sampled_coauthor_orcids", candidate)
+        self.assertEqual(result["potential_coauthorship_coi_records"], 1)
+        email.assert_not_called()
+        author_orcids.assert_called_once()
+
+    @patch("reviewer_matching.combined.fetch_public_email")
+    @patch(
+        "reviewer_matching.combined.get_article_author_orcids",
+        return_value=set(),
+    )
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_no_coauthor_match_does_not_clear_coi(
+        self, internal, discovery, resolver, author_orcids, email
+    ):
+        discovery.return_value = [
+            {
+                **self.candidate(),
+                "sampled_coauthor_orcids": ["0000-0002-1825-0003"],
+            }
+        ]
+
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+        )
+        candidate = result["results"]["external"][0]
+
+        self.assertFalse(candidate["potential_coauthorship_coi"])
+        self.assertEqual(candidate["coi_status"], "not_checked")
+        self.assertFalse(candidate["coi_screening_complete"])
+        self.assertFalse(candidate["invitation_ready"])
+        self.assertNotIn("sampled_coauthor_orcids", candidate)
+        email.assert_not_called()

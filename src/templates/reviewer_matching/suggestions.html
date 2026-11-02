@@ -63,8 +63,10 @@
             Editorial verification and conflict-of-interest checks
             are still required. Publication years reflect only the
             sampled search results, not a complete publication history
-            or proof of current research activity. No invitation is sent
-            automatically.
+            or proof of current research activity. A possible co-authorship
+            warning uses ORCIDs found on sampled public works only; absence
+            of a warning does not rule out conflicts of interest.
+            No invitation is sent automatically.
           </p>
 
           <h4>Article-derived search topics</h4>
@@ -242,6 +244,11 @@
                 editorialCell.textContent +=
                   " — Possible duplicate OpenAlex records (shared ORCID); " +
                   "verify identity manually before any invitation.";
+              }
+              if (candidate.potential_coauthorship_coi === true) {
+                editorialCell.textContent +=
+                  " — Potential shared publication with a manuscript " +
+                  "author (ORCID evidence); manual COI review required.";
               }
 
               rows.appendChild(row);

@@ -253,6 +253,37 @@ class OpenAlexTests(unittest.TestCase):
         self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
         self.assertEqual(result[0]["activity_status"], "not_assessed")
 
+    def test_sampled_public_coauthors_are_work_specific(self):
+        record = work(
+            701,
+            [(3, "Candidate"), (4, "Article Author")],
+        )
+        record["authorships"][0]["author"]["orcid"] = (
+            "https://orcid.org/0000-0002-1825-0097"
+        )
+        record["authorships"][1]["author"]["orcid"] = (
+            "https://orcid.org/0000-0002-1825-0003"
+        )
+        session = Mock()
+        session.get.return_value = response_for([record])
+
+        result = discover_external_researchers(
+            ["Fuzzy Logic"],
+            session=session,
+        )
+
+        candidate = next(row for row in result if row["openalex_id"] == "A3")
+        self.assertEqual(
+            candidate["sampled_coauthor_orcids"],
+            ["0000-0002-1825-0003"],
+        )
+
+        article_author = next(row for row in result if row["openalex_id"] == "A4")
+        self.assertEqual(
+            article_author["sampled_coauthor_orcids"],
+            ["0000-0002-1825-0097"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
