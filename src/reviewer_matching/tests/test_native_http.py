@@ -842,7 +842,6 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertContains(page, "&lt;script&gt;alert(1)&lt;/script&gt;")
         self.assertNotContains(page, "<script>alert(1)</script>")
 
-
     def test_strict_coi_gate_uses_latest_editorial_decision(self):
         from django.core.exceptions import PermissionDenied
         from review.models import ReviewerCOIAssessment
