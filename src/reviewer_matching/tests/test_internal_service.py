@@ -118,11 +118,13 @@ class InternalReviewerServiceTests(unittest.TestCase):
 
     def test_excludes_author_when_email_orcid_formats_differ(self):
         article = make_article(words=["AI"])
-        frozen = [{
-            "author_id": None,
-            "frozen_email": "Author@Example.Org ",
-            "frozen_orcid": "https://orcid.org/0000-0002-1825-0097/",
-        }]
+        frozen = [
+            {
+                "author_id": None,
+                "frozen_email": "Author@Example.Org ",
+                "frozen_orcid": "https://orcid.org/0000-0002-1825-0097/",
+            }
+        ]
         reviewers = [
             FakeReviewer(1, email="author@example.org"),
             FakeReviewer(2, orcid="0000-0002-1825-0097"),
