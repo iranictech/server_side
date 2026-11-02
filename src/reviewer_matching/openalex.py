@@ -6,6 +6,7 @@ No invitation or Janeway account is created.
 
 import os
 import re
+from datetime import date
 
 import requests
 
@@ -84,6 +85,13 @@ def _extract_id(value, pattern):
 
     match = pattern.fullmatch(value.strip())
     return match.group(1) if match else None
+
+
+def _sample_publication_year(value):
+    """Accept plausible OpenAlex work years, never inferred or coerced."""
+    if type(value) is not int:
+        return None
+    return value if 1500 <= value <= date.today().year + 1 else None
 
 
 from .identity import extract_openalex_orcid
@@ -168,6 +176,9 @@ def discover_external_researchers(
                     continue
 
                 authorships = work.get("authorships") or []
+                publication_year = _sample_publication_year(
+                    work.get("publication_year")
+                )
 
                 if not isinstance(authorships, list):
                     continue
@@ -199,6 +210,7 @@ def discover_external_researchers(
                             "source": "openalex",
                             "matched_public_topics": set(),
                             "evidence_work_ids": set(),
+                            "sampled_publication_years": set(),
                             "orcid_candidates": set(),
                         },
                     )
@@ -209,6 +221,8 @@ def discover_external_researchers(
 
                     record["matched_public_topics"].add(topic)
                     record["evidence_work_ids"].add(work_id)
+                    if publication_year is not None:
+                        record["sampled_publication_years"].add(publication_year)
 
     finally:
         if own_session:
@@ -218,6 +232,7 @@ def discover_external_researchers(
 
     for record in candidates.values():
         works = sorted(record["evidence_work_ids"])
+        years = record["sampled_publication_years"]
         orcids = record["orcid_candidates"]
 
         if len(orcids) > 1:
@@ -240,6 +255,9 @@ def discover_external_researchers(
                 "matched_public_topics": sorted(record["matched_public_topics"]),
                 "matching_works_count": len(works),
                 "evidence_work_ids": works,
+                # Only the searched works are sampled: not a full researcher history.
+                "latest_sampled_publication_year": max(years) if years else None,
+                "activity_status": "not_assessed",
                 "identity_verified": False,
                 "coi_status": "not_checked",
                 "invitation_ready": False,
