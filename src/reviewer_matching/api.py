@@ -9,6 +9,7 @@ from submission.models import Article
 
 from .services import get_internal_matches
 from .permissions import enforce_assign_reviewer_policy
+from .coi_records import create_coi_decision
 
 
 @require_GET
@@ -196,3 +197,38 @@ def combined_reviewer_matches(request, article_id):
     result["journal"] = journal.code
 
     return JsonResponse(result)
+
+
+@require_POST
+@csrf_protect
+@editor_user_required
+def record_coi_assessment(request, article_id):
+    """Append an editor-reviewed COI decision for an internal reviewer."""
+    journal = getattr(request, "journal", None)
+    if journal is None:
+        raise Http404
+
+    article = get_object_or_404(Article, pk=article_id, journal=journal)
+    enforce_assign_reviewer_policy(request, article)
+
+    try:
+        result = create_coi_decision(
+            article,
+            editor=request.user,
+            reviewer_id=request.POST.get("reviewer_id"),
+            status=request.POST.get("status"),
+            rationale=request.POST.get("rationale"),
+        )
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    return JsonResponse(
+        {
+            "assessment_id": result.pk,
+            "reviewer_id": result.reviewer_id,
+            "status": result.status,
+            "coi_screening_complete": False,
+            "invitation_ready": False,
+        },
+        status=201,
+    )
