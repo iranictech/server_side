@@ -846,9 +846,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_strict_coi_gate_uses_latest_editorial_decision(self):
         from django.core.exceptions import PermissionDenied
         from review.models import ReviewerCOIAssessment
-        from reviewer_matching.invitation_policy import (
-            enforce_reviewer_invitation_coi,
-        )
+        from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
         reviewer = Account.objects.create(
             username="coi_gate_reviewer",
@@ -910,9 +908,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_coi_clearance_cannot_override_new_authorship(self):
         from django.core.exceptions import PermissionDenied
         from review.models import ReviewerCOIAssessment
-        from reviewer_matching.invitation_policy import (
-            enforce_reviewer_invitation_coi,
-        )
+        from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
         reviewer = Account.objects.create(
             username="coi_changed_author",
@@ -941,9 +937,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_coi_clearance_cannot_override_deactivated_reviewer(self):
         from django.core.exceptions import PermissionDenied
         from review.models import ReviewerCOIAssessment
-        from reviewer_matching.invitation_policy import (
-            enforce_reviewer_invitation_coi,
-        )
+        from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
         reviewer = Account.objects.create(
             username="coi_deactivated_reviewer",
