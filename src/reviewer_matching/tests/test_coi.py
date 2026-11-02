@@ -26,9 +26,7 @@ class CoiEvidenceTests(unittest.TestCase):
 
         result = get_article_author_orcids(article)
 
-        self.assertEqual(
-            result, {"0000-0001-2345-6789", "0000-0002-1825-0097"}
-        )
+        self.assertEqual(result, {"0000-0001-2345-6789", "0000-0002-1825-0097"})
         frozen.objects.filter.assert_called_once_with(article=article)
         accounts.values_list.assert_called_once_with("orcid", flat=True)
 
@@ -54,8 +52,6 @@ class CoiEvidenceTests(unittest.TestCase):
             [],
         )
         self.assertEqual(
-            sampled_coauthorship_evidence(
-                {"0000-0001-2345-6789": ["W1"]}, set()
-            ),
+            sampled_coauthorship_evidence({"0000-0001-2345-6789": ["W1"]}, set()),
             [],
         )

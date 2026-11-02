@@ -253,7 +253,6 @@ class OpenAlexTests(unittest.TestCase):
         self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
         self.assertEqual(result[0]["activity_status"], "not_assessed")
 
-
     def test_public_coauthor_orcid_evidence_uses_same_sampled_work(self):
         record = work(701, [(10, "Candidate"), (11, "Manuscript Author")])
         record["authorships"][0]["author"]["orcid"] = "0000-0002-1825-0097"
