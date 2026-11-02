@@ -7,6 +7,9 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
 from review.models import ReviewerCOIAssessment
+from submission.models import FrozenAuthor
+
+from .identity import normalize_orcid
 
 
 def enforce_reviewer_invitation_coi(article, reviewer):
@@ -14,8 +17,32 @@ def enforce_reviewer_invitation_coi(article, reviewer):
     if not getattr(settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False):
         return
 
-    if reviewer is None or reviewer.pk is None:
-        raise PermissionDenied("A known reviewer account is required.")
+    if reviewer is None or reviewer.pk is None or not reviewer.is_active:
+        raise PermissionDenied("An active reviewer account is required.")
+
+    if article.author_accounts.filter(pk=reviewer.pk).exists():
+        raise PermissionDenied("An article author cannot review the article.")
+
+    authors = FrozenAuthor.objects.filter(article=article)
+    if authors.filter(author=reviewer).exists():
+        raise PermissionDenied("An article author cannot review the article.")
+
+    candidate_email = (reviewer.email or "").strip().casefold()
+    frozen_emails = authors.values_list("frozen_email", flat=True)
+    if candidate_email and any(
+        (value or "").strip().casefold() == candidate_email
+        for value in frozen_emails
+    ):
+        raise PermissionDenied("Article-author email conflicts with reviewer.")
+
+    candidate_orcid = normalize_orcid(reviewer.orcid)
+    if candidate_orcid:
+        author_orcids = list(authors.values_list("frozen_orcid", flat=True))
+        author_orcids.extend(
+            article.author_accounts.values_list("orcid", flat=True)
+        )
+        if any(normalize_orcid(value) == candidate_orcid for value in author_orcids):
+            raise PermissionDenied("Article-author ORCID conflicts with reviewer.")
 
     latest = (
         ReviewerCOIAssessment.objects.filter(article=article, reviewer=reviewer)

@@ -907,3 +907,59 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             self.assertGreaterEqual(
                 source.count("enforce_reviewer_invitation_coi("), count
             )
+
+    def test_coi_clearance_cannot_override_new_authorship(self):
+        from django.core.exceptions import PermissionDenied
+        from review.models import ReviewerCOIAssessment
+        from reviewer_matching.invitation_policy import (
+            enforce_reviewer_invitation_coi,
+        )
+
+        reviewer = Account.objects.create(
+            username="coi_changed_author",
+            email="coi_changed_author@example.org",
+            is_active=True,
+        )
+        ReviewerCOIAssessment.objects.create(
+            article=self.article_a,
+            reviewer=reviewer,
+            assessed_by=self.editor,
+            status="cleared",
+            rationale="Initially no conflict was found.",
+        )
+        with override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True):
+            enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+            FrozenAuthor.objects.create(
+                article=self.article_a,
+                author=reviewer,
+                first_name="New",
+                last_name="Author",
+            )
+            with self.assertRaises(PermissionDenied):
+                enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+    def test_coi_clearance_cannot_override_deactivated_reviewer(self):
+        from django.core.exceptions import PermissionDenied
+        from review.models import ReviewerCOIAssessment
+        from reviewer_matching.invitation_policy import (
+            enforce_reviewer_invitation_coi,
+        )
+
+        reviewer = Account.objects.create(
+            username="coi_deactivated_reviewer",
+            email="coi_deactivated_reviewer@example.org",
+            is_active=True,
+        )
+        ReviewerCOIAssessment.objects.create(
+            article=self.article_a,
+            reviewer=reviewer,
+            assessed_by=self.editor,
+            status="cleared",
+            rationale="No conflict was identified before deactivation.",
+        )
+        reviewer.is_active = False
+        reviewer.save(update_fields=["is_active"])
+        with override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True):
+            with self.assertRaises(PermissionDenied):
+                enforce_reviewer_invitation_coi(self.article_a, reviewer)
