@@ -310,6 +310,27 @@ class ReviewTests(TestCase):
             SERVER_NAME=self.journal_one.domain,
         )
         msg = "The following incomplete reviews will be marked as withdrawn"
+        if response.status_code == 403:
+            denied_request = response.wsgi_request
+            details = {
+                "selected_role": getattr(
+                    denied_request, "active_role_slug", None
+                ),
+                "journal": getattr(
+                    getattr(denied_request, "journal", None), "code", None
+                ),
+                "user_active": denied_request.user.is_active,
+                "is_editor": denied_request.user.is_editor(denied_request),
+                "assigned_roles": list(
+                    self.editor.accountrole_set.filter(
+                        journal=self.journal_one
+                    ).values_list("role__slug", flat=True)
+                ),
+                "editor_is_author": (
+                    denied_request.user in article1.author_accounts
+                ),
+            }
+            self.fail(f"Diagnostic: decision denied; {details}")
         self.assertContains(response, msg)
 
         data = {
