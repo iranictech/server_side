@@ -253,7 +253,6 @@ class OpenAlexTests(unittest.TestCase):
         self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
         self.assertEqual(result[0]["activity_status"], "not_assessed")
 
-
     def test_sampled_public_coauthors_are_work_specific(self):
         record = work(
             701,
