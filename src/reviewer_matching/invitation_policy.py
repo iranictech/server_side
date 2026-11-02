@@ -29,18 +29,14 @@ def enforce_reviewer_invitation_coi(article, reviewer):
 
     candidate_email = (reviewer.email or "").strip().casefold()
     frozen_emails = authors.values_list("frozen_email", flat=True)
-    if candidate_email and any(
-        (value or "").strip().casefold() == candidate_email
-        for value in frozen_emails
-    ):
+    normalized_emails = {(value or "").strip().casefold() for value in frozen_emails}
+    if candidate_email and candidate_email in normalized_emails:
         raise PermissionDenied("Article-author email conflicts with reviewer.")
 
     candidate_orcid = normalize_orcid(reviewer.orcid)
     if candidate_orcid:
         author_orcids = list(authors.values_list("frozen_orcid", flat=True))
-        author_orcids.extend(
-            article.author_accounts.values_list("orcid", flat=True)
-        )
+        author_orcids.extend(article.author_accounts.values_list("orcid", flat=True))
         if any(normalize_orcid(value) == candidate_orcid for value in author_orcids):
             raise PermissionDenied("Article-author ORCID conflicts with reviewer.")
 

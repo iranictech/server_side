@@ -904,9 +904,8 @@ class NativeReviewerMatchingHTTPTests(TestCase):
             "review/views.py": 1,
         }.items():
             source = (root / name).read_text(encoding="utf-8")
-            self.assertGreaterEqual(
-                source.count("enforce_reviewer_invitation_coi("), count
-            )
+            occurrences = source.count("enforce_reviewer_invitation_coi(")
+            self.assertGreaterEqual(occurrences, count)
 
     def test_coi_clearance_cannot_override_new_authorship(self):
         from django.core.exceptions import PermissionDenied

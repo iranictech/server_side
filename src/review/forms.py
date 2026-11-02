@@ -129,9 +129,7 @@ class ReviewAssignmentForm(forms.ModelForm, core_forms.ConfirmableIfErrorsForm):
         review_assignment.access_code = uuid4()
 
         if commit:
-            enforce_reviewer_invitation_coi(
-                self.article, review_assignment.reviewer
-            )
+            enforce_reviewer_invitation_coi(self.article, review_assignment.reviewer)
             review_assignment.save()
 
         return review_assignment
