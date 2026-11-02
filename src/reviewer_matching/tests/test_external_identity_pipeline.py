@@ -126,12 +126,21 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
         return_value=[],
     )
     def test_email_lookup_has_request_limit(self, internal, discovery, resolver, email):
+        # Distinct identities exercise the lookup limit; shared ORCIDs
+        # are intentionally blocked by the duplicate-identity safeguard.
+        distinct_orcids = [
+            "0000-0002-1825-0003",
+            "0000-0002-1825-0011",
+            "0000-0002-1825-002X",
+            "0000-0002-1825-0038",
+            "0000-0002-1825-0046",
+        ]
         discovery.return_value = [
             {
-                **self.candidate(),
+                **self.candidate(orcid=orcid),
                 "openalex_id": f"A{i}",
             }
-            for i in range(5)
+            for i, orcid in enumerate(distinct_orcids)
         ]
 
         email.return_value = {
