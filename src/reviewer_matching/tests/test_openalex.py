@@ -201,5 +201,58 @@ class OpenAlexTests(unittest.TestCase):
         )
 
 
+    def test_latest_year_only_from_sampled_matching_works(self):
+        older = work(401, [(3, "Researcher Three")])
+        newer = work(402, [(3, "Researcher Three")])
+        older["publication_year"] = 2019
+        newer["publication_year"] = 2025
+
+        session = Mock()
+        session.get.return_value = response_for([older, newer])
+
+        result = discover_external_researchers(
+            ["Machine Learning"],
+            session=session,
+        )
+
+        self.assertEqual(result[0]["latest_sampled_publication_year"], 2025)
+        self.assertEqual(result[0]["activity_status"], "not_assessed")
+        self.assertFalse(result[0]["invitation_ready"])
+
+    def test_missing_or_invalid_publication_year_is_not_activity_evidence(self):
+        values = [None, "", "2025", True, 0, 1499, 9999]
+        records = []
+        for index, year in enumerate(values):
+            record = work(index + 501, [(3, "Researcher Three")])
+            record["publication_year"] = year
+            records.append(record)
+
+        session = Mock()
+        session.get.return_value = response_for(records)
+
+        result = discover_external_researchers(
+            ["Statistics"],
+            session=session,
+        )
+
+        self.assertEqual(result[0]["latest_sampled_publication_year"], None)
+        self.assertEqual(result[0]["activity_status"], "not_assessed")
+        self.assertEqual(result[0]["matching_works_count"], len(values))
+
+    def test_sampled_year_does_not_imply_latest_overall_publication(self):
+        old_sample = work(601, [(3, "Researcher Three")])
+        old_sample["publication_year"] = 2010
+
+        session = Mock()
+        session.get.return_value = response_for([old_sample])
+
+        result = discover_external_researchers(
+            ["Statistics"],
+            session=session,
+        )
+
+        self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
+        self.assertEqual(result[0]["activity_status"], "not_assessed")
+
 if __name__ == "__main__":
     unittest.main()

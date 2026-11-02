@@ -64,3 +64,14 @@ class NativeSuggestionsTests(SimpleTestCase):
 
         self.assertIn("candidate.possible_duplicate", source)
         self.assertIn("Possible duplicate OpenAlex records", source)
+
+    def test_sampled_year_has_explicit_scope_warning(self):
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "templates/reviewer_matching/suggestions.html"
+        )
+        source = path.read_text(encoding="utf-8")
+
+        self.assertIn("Latest Year in Sample", source)
+        self.assertIn("candidate.latest_sampled_publication_year", source)
+        self.assertIn("not a complete publication history", source)
