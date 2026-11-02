@@ -9,6 +9,20 @@ from .openalex import (
 )
 
 
+def _possible_duplicate_orcids(candidates):
+    """Flag shared ORCIDs across distinct OpenAlex IDs; never merge profiles."""
+    by_orcid = {}
+    for candidate in candidates:
+        if candidate.get("orcid_status") != "available":
+            continue
+        orcid = normalize_orcid(candidate.get("orcid"))
+        openalex_id = candidate.get("openalex_id")
+        if orcid and isinstance(openalex_id, str) and openalex_id:
+            by_orcid.setdefault(orcid, set()).add(openalex_id)
+
+    return {orcid for orcid, ids in by_orcid.items() if len(ids) > 1}
+
+
 def build_combined_matches(
     article,
     editor,
@@ -40,6 +54,7 @@ def build_combined_matches(
                 limit=external_limit,
             )
             enriched = []
+            duplicate_orcids = _possible_duplicate_orcids(external)
 
             for candidate in external:
                 item = dict(candidate)
@@ -60,6 +75,16 @@ def build_combined_matches(
 
                 item["orcid"] = orcid or None
                 item["identity_status"] = identity_status
+                item["possible_duplicate"] = (
+                    item.get("orcid_status") == "available"
+                    and bool(orcid)
+                    and orcid in duplicate_orcids
+                )
+                item["identity_warnings"] = (
+                    ["shared_orcid_across_openalex_profiles"]
+                    if item["possible_duplicate"]
+                    else []
+                )
                 item["identity_verified"] = False
                 item["email"] = None
                 item["email_source"] = None
@@ -71,7 +96,9 @@ def build_combined_matches(
                 elif identity_status == "new_external":
                     item["email_status"] = "disabled"
 
-                    if allow_orcid_email:
+                    if item["possible_duplicate"]:
+                        item["email_status"] = "manual_identity_review_required"
+                    elif allow_orcid_email:
                         # Bound synchronous network calls.
                         # A queued lookup service can replace this later.
                         if orcid_lookups < 3:
@@ -108,6 +135,9 @@ def build_combined_matches(
         "cross_source_identity_resolution_complete": False,
         "external_status": external_status,
         "excluded_article_authors": excluded_article_authors,
+        "possible_duplicate_external_records": sum(
+            item["possible_duplicate"] for item in external
+        ),
         "orcid_email_lookup_enabled": bool(allow_external and allow_orcid_email),
         "counts": {
             "internal": len(internal),

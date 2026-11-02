@@ -153,3 +153,114 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
             result["results"]["external"][4]["email_status"],
             "not_checked_limit",
         )
+
+    @patch("reviewer_matching.combined.fetch_public_email")
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_shared_orcid_warns_without_merging_or_email_lookup(
+        self, internal, discovery, resolver, email
+    ):
+        discovery.return_value = [
+            self.candidate(),
+            {
+                **self.candidate(orcid=f"https://orcid.org/{ORCID}"),
+                "openalex_id": "A456",
+                "name": "Another OpenAlex Profile",
+            },
+        ]
+
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+            allow_orcid_email=True,
+        )
+
+        candidates = result["results"]["external"]
+        self.assertEqual([item["openalex_id"] for item in candidates], ["A123", "A456"])
+        self.assertEqual(result["possible_duplicate_external_records"], 2)
+        for item in candidates:
+            self.assertTrue(item["possible_duplicate"])
+            self.assertEqual(
+                item["identity_warnings"],
+                ["shared_orcid_across_openalex_profiles"],
+            )
+            self.assertEqual(
+                item["email_status"], "manual_identity_review_required"
+            )
+            self.assertFalse(item["identity_verified"])
+            self.assertFalse(item["invitation_ready"])
+        email.assert_not_called()
+
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_same_name_or_missing_orcid_does_not_prove_duplication(
+        self, internal, discovery, resolver
+    ):
+        discovery.return_value = [
+            self.candidate(orcid=None, status="missing"),
+            {
+                **self.candidate(orcid=None, status="missing"),
+                "openalex_id": "A456",
+            },
+        ]
+
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+        )
+
+        self.assertEqual(result["possible_duplicate_external_records"], 0)
+        for item in result["results"]["external"]:
+            self.assertFalse(item["possible_duplicate"])
+            self.assertEqual(item["identity_warnings"], [])
+
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_ambiguous_orcid_is_not_duplicate_evidence(
+        self, internal, discovery, resolver
+    ):
+        discovery.return_value = [
+            self.candidate(),
+            {
+                **self.candidate(status="ambiguous"),
+                "openalex_id": "A456",
+            },
+        ]
+
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+        )
+
+        self.assertEqual(result["possible_duplicate_external_records"], 0)
+        self.assertEqual(
+            [item["possible_duplicate"] for item in result["results"]["external"]],
+            [False, False],
+        )
