@@ -13,6 +13,7 @@ from reviewer_matching.views import suggestions_page as native_reviewer_suggesti
 from reviewer_matching.api import (
     internal_reviewer_matches as native_internal_reviewer_matches,
     combined_reviewer_matches as native_combined_reviewer_matches,
+    record_coi_assessment as native_record_coi_assessment,
 )
 
 
@@ -33,6 +34,11 @@ urlpatterns = [
         r"^manager/reviewer-matching/article/(?P<article_id>\d+)/combined/$",
         native_combined_reviewer_matches,
         name="reviewer_matching_native_combined",
+    ),
+    re_path(
+        r"^manager/reviewer-matching/article/(?P<article_id>\\d+)/coi-assessment/$",
+        native_record_coi_assessment,
+        name="reviewer_matching_native_coi_assessment",
     ),
     re_path(r"^$", views.home, name="review_home"),
     re_path(r"^unassigned/$", views.unassigned, name="review_unassigned"),

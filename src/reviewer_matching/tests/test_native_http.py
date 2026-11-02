@@ -694,3 +694,119 @@ class NativeReviewerMatchingHTTPTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
         builder.assert_not_called()
+
+    def test_record_editorial_coi_assessments_are_append_only(self):
+        from review.models import ReviewerCOIAssessment
+
+        role, _ = Role.objects.get_or_create(
+            slug="reviewer", defaults={"name": "Reviewer"}
+        )
+        reviewer = Account.objects.create(
+            username="coi_audit_reviewer",
+            email="coi_audit_reviewer@example.org",
+            is_active=True,
+        )
+        AccountRole.objects.create(
+            user=reviewer, journal=self.journal_a, role=role
+        )
+        url = self.url("reviewer_matching_native_coi_assessment")
+        payload = {
+            "reviewer_id": reviewer.pk,
+            "status": "uncertain",
+            "rationale": "Institutional affiliation needs verification.",
+        }
+        first = self.client.post(url, payload)
+        self.assertEqual(first.status_code, 201, first.content)
+        self.assertFalse(first.json()["invitation_ready"])
+
+        payload["status"] = "cleared"
+        payload["rationale"] = "Editorial review confirmed no apparent relationship."
+        second = self.client.post(url, payload)
+        self.assertEqual(second.status_code, 201, second.content)
+        decisions = list(
+            ReviewerCOIAssessment.objects.filter(
+                article=self.article_a, reviewer=reviewer
+            )
+        )
+        self.assertEqual(len(decisions), 2)
+        self.assertEqual(decisions[0].status, "cleared")
+        self.assertEqual(decisions[1].status, "uncertain")
+        self.assertEqual(decisions[0].assessed_by, self.editor)
+
+    def test_coi_recording_rejects_non_editor_and_other_journal(self):
+        from review.models import ReviewerCOIAssessment
+
+        role, _ = Role.objects.get_or_create(
+            slug="reviewer", defaults={"name": "Reviewer"}
+        )
+        reviewer = Account.objects.create(
+            username="coi_scoped_reviewer",
+            email="coi_scoped_reviewer@example.org",
+            is_active=True,
+        )
+        AccountRole.objects.create(user=reviewer, journal=self.journal_a, role=role)
+        payload = {
+            "reviewer_id": reviewer.pk,
+            "status": "cleared",
+            "rationale": "Independent editorial conflict review was completed.",
+        }
+        self.client.force_login(self.reader)
+        response = self.client.post(
+            self.url("reviewer_matching_native_coi_assessment"), payload
+        )
+        self.assertNotEqual(response.status_code, 201)
+
+        self.client.force_login(self.editor)
+        other = self.client.post(
+            self.url("reviewer_matching_native_coi_assessment", self.article_b),
+            payload,
+        )
+        self.assertEqual(other.status_code, 404)
+        self.assertFalse(ReviewerCOIAssessment.objects.exists())
+
+    def test_coi_recording_rejects_author_and_invalid_status(self):
+        from review.models import ReviewerCOIAssessment
+
+        role, _ = Role.objects.get_or_create(
+            slug="reviewer", defaults={"name": "Reviewer"}
+        )
+        reviewer = Account.objects.create(
+            username="coi_author_reviewer",
+            email="coi_author_reviewer@example.org",
+            is_active=True,
+        )
+        AccountRole.objects.create(user=reviewer, journal=self.journal_a, role=role)
+        FrozenAuthor.objects.create(
+            article=self.article_a,
+            author=reviewer,
+            first_name="Author",
+            last_name="Reviewer",
+        )
+        url = self.url("reviewer_matching_native_coi_assessment")
+        payload = {
+            "reviewer_id": reviewer.pk,
+            "status": "cleared",
+            "rationale": "Editorial review of the candidate was completed.",
+        }
+        rejected = self.client.post(url, payload)
+        self.assertEqual(rejected.status_code, 400)
+
+        payload["status"] = "automatically_cleared"
+        invalid = self.client.post(url, payload)
+        self.assertEqual(invalid.status_code, 400)
+        self.assertFalse(ReviewerCOIAssessment.objects.exists())
+
+    def test_coi_recording_requires_csrf(self):
+        secure_client = Client(
+            HTTP_HOST="rma.testserver", enforce_csrf_checks=True
+        )
+        secure_client.force_login(self.editor)
+        response = secure_client.post(
+            self.url("reviewer_matching_native_coi_assessment"),
+            {
+                "reviewer_id": 999,
+                "status": "cleared",
+                "rationale": "This is a test rationale for audit.",
+            },
+        )
+        self.assertEqual(response.status_code, 403)
