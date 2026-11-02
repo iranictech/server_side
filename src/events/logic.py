@@ -326,9 +326,7 @@ class Events:
         ):
             from django.core.exceptions import PermissionDenied
 
-            from reviewer_matching.invitation_policy import (
-                enforce_reviewer_invitation_coi,
-            )
+            from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
             assignment = kwargs.get("review_assignment")
             if assignment is None:
