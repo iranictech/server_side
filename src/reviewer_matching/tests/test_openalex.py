@@ -200,7 +200,6 @@ class OpenAlexTests(unittest.TestCase):
             "missing",
         )
 
-
     def test_latest_year_only_from_sampled_matching_works(self):
         older = work(401, [(3, "Researcher Three")])
         newer = work(402, [(3, "Researcher Three")])
@@ -253,6 +252,7 @@ class OpenAlexTests(unittest.TestCase):
 
         self.assertEqual(result[0]["latest_sampled_publication_year"], 2010)
         self.assertEqual(result[0]["activity_status"], "not_assessed")
+
 
 if __name__ == "__main__":
     unittest.main()
