@@ -3,6 +3,7 @@
 from review.logic import get_reviewer_candidates
 from submission.models import FrozenAuthor
 
+from .identity import normalize_orcid
 from .ranking import rank_internal
 
 
@@ -23,15 +24,15 @@ def get_internal_matches(article, editor, limit=20):
     author_ids.update(article.author_accounts.values_list("pk", flat=True))
 
     author_emails = {
-        row["frozen_email"].strip()
+        row["frozen_email"].strip().casefold()
         for row in authors
         if row["frozen_email"] and row["frozen_email"].strip()
     }
-    author_orcids = {
-        row["frozen_orcid"].strip()
-        for row in authors
-        if row["frozen_orcid"] and row["frozen_orcid"].strip()
-    }
+    author_orcids = set()
+    for row in authors:
+        normalized_orcid = normalize_orcid(row["frozen_orcid"])
+        if normalized_orcid:
+            author_orcids.add(normalized_orcid)
 
     reviewers = get_reviewer_candidates(article, user=editor)
 
@@ -44,6 +45,15 @@ def get_internal_matches(article, editor, limit=20):
 
     results = []
     for reviewer in reviewers.distinct():
+        # Database exact-match filters are an optimization, not a substitute
+        # for canonical author-identity exclusion.
+        if reviewer.email and reviewer.email.strip().casefold() in author_emails:
+            continue
+
+        reviewer_orcid = normalize_orcid(reviewer.orcid)
+        if reviewer_orcid and reviewer_orcid in author_orcids:
+            continue
+
         interests = sorted(
             {
                 interest.name.strip()
