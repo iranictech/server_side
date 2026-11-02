@@ -841,3 +841,69 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertContains(page, "uncertain")
         self.assertContains(page, "&lt;script&gt;alert(1)&lt;/script&gt;")
         self.assertNotContains(page, "<script>alert(1)</script>")
+
+
+    def test_strict_coi_gate_uses_latest_editorial_decision(self):
+        from django.core.exceptions import PermissionDenied
+        from review.models import ReviewerCOIAssessment
+        from reviewer_matching.invitation_policy import (
+            enforce_reviewer_invitation_coi,
+        )
+
+        reviewer = Account.objects.create(
+            username="coi_gate_reviewer",
+            email="coi_gate_reviewer@example.org",
+            is_active=True,
+        )
+        enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+        with override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True):
+            with self.assertRaises(PermissionDenied):
+                enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+            ReviewerCOIAssessment.objects.create(
+                article=self.article_a,
+                reviewer=reviewer,
+                assessed_by=self.editor,
+                status="cleared",
+                rationale="No apparent conflict after editorial review.",
+            )
+            enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+            ReviewerCOIAssessment.objects.create(
+                article=self.article_a,
+                reviewer=reviewer,
+                assessed_by=self.editor,
+                status="conflict",
+                rationale="Subsequent evidence identified a conflict.",
+            )
+            with self.assertRaises(PermissionDenied):
+                enforce_reviewer_invitation_coi(self.article_a, reviewer)
+
+            with self.assertRaises(PermissionDenied):
+                enforce_reviewer_invitation_coi(self.article_b, reviewer)
+
+    def test_strict_coi_gate_disables_csv_before_side_effects(self):
+        from review.logic import process_reviewer_csv
+
+        with override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True):
+            matches, error = process_reviewer_csv(
+                "/path/that/does/not/exist.csv",
+                request=None,
+                article=self.article_a,
+                form=None,
+            )
+        self.assertEqual(matches, [])
+        self.assertIn("disabled under strict COI review", error)
+
+    def test_invitation_policy_call_sites_are_wired(self):
+        root = Path(settings.BASE_DIR)
+        for name, count in {
+            "review/logic.py": 1,
+            "review/forms.py": 2,
+            "review/views.py": 1,
+        }.items():
+            source = (root / name).read_text(encoding="utf-8")
+            self.assertGreaterEqual(
+                source.count("enforce_reviewer_invitation_coi("), count
+            )

@@ -27,6 +27,7 @@ from django.db.models import (
 from django.shortcuts import redirect, reverse
 from django.utils import timezone
 from django.db import IntegrityError
+from django.core.exceptions import PermissionDenied
 from django.utils.safestring import mark_safe
 from docx import Document
 
@@ -40,6 +41,7 @@ from review import models
 from review.const import EditorialDecisions as ED
 from events import logic as event_logic
 from submission import models as submission_models
+from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
 
 def get_reviewers(article, candidate_queryset, exclude_pks):
@@ -648,6 +650,12 @@ def quick_assign(request, article, reviewer_user=None):
         errors.append("This user is not a reviewer for this journal.")
 
     if not errors:
+        try:
+            enforce_reviewer_invitation_coi(article, user)
+        except PermissionDenied as exc:
+            errors.append(str(exc))
+
+    if not errors:
         new_assignment = models.ReviewAssignment.objects.create(
             article=article,
             reviewer=user,
@@ -894,6 +902,11 @@ def process_reviewer_csv(path, request, article, form):
     """
     Iterates through a CSV c
     """
+    # This pathway creates accounts and sends invitations during import.
+    # Disable it until each row can be approved before any side effects.
+    if getattr(settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False):
+        return [], "Bulk CSV assignment is disabled under strict COI review."
+
     try:
         csv_file = open(path, "r", encoding="utf-8-sig")
         reader = csv.DictReader(csv_file)
