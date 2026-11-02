@@ -6,16 +6,18 @@ Default OFF. Enable only after the COI migration and rollout review.
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from review.models import ReviewerCOIAssessment
-from submission.models import FrozenAuthor
-
-from .identity import normalize_orcid
-
 
 def enforce_reviewer_invitation_coi(article, reviewer):
     """Require the latest manually recorded decision to be cleared."""
     if not getattr(settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False):
         return
+
+    # Import Django models only after app initialization. review.logic and
+    # review.forms are themselves loaded during core.models initialization.
+    from review.models import ReviewerCOIAssessment
+    from submission.models import FrozenAuthor
+
+    from .identity import normalize_orcid
 
     if reviewer is None or reviewer.pk is None or not reviewer.is_active:
         raise PermissionDenied("An active reviewer account is required.")
