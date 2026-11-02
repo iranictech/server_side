@@ -36,7 +36,7 @@ urlpatterns = [
         name="reviewer_matching_native_combined",
     ),
     re_path(
-        r"^manager/reviewer-matching/article/(?P<article_id>\\d+)/coi-assessment/$",
+        r"^manager/reviewer-matching/article/(?P<article_id>\d+)/coi-assessment/$",
         native_record_coi_assessment,
         name="reviewer_matching_native_coi_assessment",
     ),
