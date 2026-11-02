@@ -818,6 +818,13 @@ def send_review_reminder(request, form, review_assignment, reminder_type):
     """
     Sends a reminder email to a reviewer
     """
+    # A request-type reminder can resend an invitation without passing
+    # through notify_reviewer or a reviewer-requested event.
+    if reminder_type == "request":
+        enforce_reviewer_invitation_coi(
+            review_assignment.article, review_assignment.reviewer
+        )
+
     desc = "{sender} sent review reminder of type {type} to {to}".format(
         sender=request.user.full_name(),
         type=reminder_type,

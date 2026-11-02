@@ -132,3 +132,121 @@ class InvitationCallSiteTests(TestCase):
         self.assertEqual(events.call_count, 2)
         article.save.assert_called_once()
         notify.assert_called_once()
+
+
+    @override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True)
+    def test_review_invitation_events_deny_before_subscribers(self):
+        from django.core.exceptions import PermissionDenied
+
+        from events.logic import Events
+
+        assignment = SimpleNamespace(article=object(), reviewer=object())
+        events = (
+            Events.ON_REVIEWER_REQUESTED,
+            Events.ON_REVIEWER_REQUESTED_NOTIFICATION,
+            Events.ON_REVIEWER_REQUESTED_ACKNOWLEDGE,
+        )
+        for event in events:
+            with self.subTest(event=event):
+                subscriber = Mock()
+                with patch.object(Events, "_hooks", {event: [subscriber]}):
+                    with patch(
+                        "reviewer_matching.invitation_policy."
+                        "enforce_reviewer_invitation_coi",
+                        side_effect=PermissionDenied("COI review required."),
+                    ) as gate:
+                        with self.assertRaises(PermissionDenied):
+                            Events.raise_event(event, review_assignment=assignment)
+
+                gate.assert_called_once_with(assignment.article, assignment.reviewer)
+                subscriber.assert_not_called()
+
+    @override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True)
+    def test_event_gate_rejects_missing_assignment_without_dispatch(self):
+        from django.core.exceptions import PermissionDenied
+
+        from events.logic import Events
+
+        event = Events.ON_REVIEWER_REQUESTED_ACKNOWLEDGE
+        subscriber = Mock()
+        with patch.object(Events, "_hooks", {event: [subscriber]}):
+            with self.assertRaises(PermissionDenied):
+                Events.raise_event(event)
+        subscriber.assert_not_called()
+
+    @override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True)
+    def test_event_gate_allows_approved_review_invitation(self):
+        from events.logic import Events
+
+        assignment = SimpleNamespace(article=object(), reviewer=object())
+        event = Events.ON_REVIEWER_REQUESTED_NOTIFICATION
+        subscriber = Mock()
+        with patch.object(Events, "_hooks", {event: [subscriber]}):
+            with patch(
+                "reviewer_matching.invitation_policy."
+                "enforce_reviewer_invitation_coi"
+            ) as gate:
+                Events.raise_event(event, review_assignment=assignment)
+
+        gate.assert_called_once_with(assignment.article, assignment.reviewer)
+        subscriber.assert_called_once_with(review_assignment=assignment)
+
+    @override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=False)
+    def test_event_gate_disabled_preserves_legacy_dispatch(self):
+        from events.logic import Events
+
+        event = Events.ON_REVIEWER_REQUESTED_ACKNOWLEDGE
+        subscriber = Mock()
+        with patch.object(Events, "_hooks", {event: [subscriber]}):
+            with patch(
+                "reviewer_matching.invitation_policy."
+                "enforce_reviewer_invitation_coi"
+            ) as gate:
+                Events.raise_event(event, sample="legacy")
+
+        gate.assert_not_called()
+        subscriber.assert_called_once_with(sample="legacy")
+
+    def test_request_reminder_gate_blocks_before_outbound_email(self):
+        from django.core.exceptions import PermissionDenied
+
+        article = object()
+        reviewer = Mock()
+        assignment = SimpleNamespace(article=article, reviewer=reviewer)
+        form = SimpleNamespace(
+            cleaned_data={"subject": "Reminder", "body": "Please review"}
+        )
+        request = SimpleNamespace(user=Mock())
+
+        with patch(
+            "review.logic.enforce_reviewer_invitation_coi",
+            side_effect=PermissionDenied("COI review required."),
+        ) as gate:
+            with patch(
+                "review.logic.notify_helpers.send_email_with_body_from_user"
+            ) as mail:
+                with self.assertRaises(PermissionDenied):
+                    logic.send_review_reminder(
+                        request, form, assignment, "request"
+                    )
+
+        gate.assert_called_once_with(article, reviewer)
+        mail.assert_not_called()
+
+    def test_accepted_review_reminder_is_not_a_new_invitation(self):
+        reviewer = Mock()
+        reviewer.full_name.return_value = "Reviewer"
+        assignment = SimpleNamespace(article=object(), reviewer=reviewer)
+        form = SimpleNamespace(
+            cleaned_data={"subject": "Status", "body": "Reminder"}
+        )
+        request = SimpleNamespace(user=Mock())
+
+        with patch("review.logic.enforce_reviewer_invitation_coi") as gate:
+            with patch(
+                "review.logic.notify_helpers.send_email_with_body_from_user"
+            ) as mail:
+                logic.send_review_reminder(request, form, assignment, "accepted")
+
+        gate.assert_not_called()
+        mail.assert_called_once()

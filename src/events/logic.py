@@ -313,6 +313,31 @@ class Events:
         :param kwargs: the arguments to pass to the event
         :return: None
         """
+        # Protect all native reviewer-invitation event subscribers, including
+        # plugin hooks and direct event dispatch. No behavior change by default.
+        reviewer_invitation_events = {
+            Events.ON_REVIEWER_REQUESTED,
+            Events.ON_REVIEWER_REQUESTED_NOTIFICATION,
+            Events.ON_REVIEWER_REQUESTED_ACKNOWLEDGE,
+        }
+        if (
+            event_name in reviewer_invitation_events
+            and getattr(settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False)
+        ):
+            from django.core.exceptions import PermissionDenied
+
+            from reviewer_matching.invitation_policy import (
+                enforce_reviewer_invitation_coi,
+            )
+
+            assignment = kwargs.get("review_assignment")
+            if assignment is None:
+                raise PermissionDenied("A review assignment is required.")
+
+            enforce_reviewer_invitation_coi(
+                assignment.article, assignment.reviewer
+            )
+
         if event_name in Events.DEPRECATED_EVENTS and settings.DEBUG:
             warnings.warn(f"{event_name} is deprecated.")
 
