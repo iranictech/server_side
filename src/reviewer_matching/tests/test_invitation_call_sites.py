@@ -77,9 +77,7 @@ class InvitationCallSiteTests(TestCase):
             events = stack.enter_context(
                 patch("review.logic.event_logic.Events.raise_event")
             )
-            notice = stack.enter_context(
-                patch("review.logic.messages.add_message")
-            )
+            notice = stack.enter_context(patch("review.logic.messages.add_message"))
             guard = stack.enter_context(
                 patch(
                     "review.logic.enforce_reviewer_invitation_coi",
