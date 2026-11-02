@@ -133,7 +133,6 @@ class InvitationCallSiteTests(TestCase):
         article.save.assert_called_once()
         notify.assert_called_once()
 
-
     @override_settings(REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE=True)
     def test_review_invitation_events_deny_before_subscribers(self):
         from django.core.exceptions import PermissionDenied

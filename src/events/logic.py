@@ -320,13 +320,13 @@ class Events:
             Events.ON_REVIEWER_REQUESTED_NOTIFICATION,
             Events.ON_REVIEWER_REQUESTED_ACKNOWLEDGE,
         }
-        strict_coi = getattr(
-            settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False
-        )
+        strict_coi = getattr(settings, "REVIEWER_MATCHING_ENFORCE_COI_ON_INVITE", False)
         if event_name in reviewer_invitation_events and strict_coi:
             from django.core.exceptions import PermissionDenied
 
-            from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
+            from reviewer_matching.invitation_policy import (
+                enforce_reviewer_invitation_coi,
+            )
 
             assignment = kwargs.get("review_assignment")
             if assignment is None:
