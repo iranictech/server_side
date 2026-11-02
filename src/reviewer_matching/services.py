@@ -34,7 +34,8 @@ def get_internal_matches(article, editor, limit=20):
         if normalized_orcid:
             author_orcids.add(normalized_orcid)
 
-    reviewers = get_reviewer_candidates(article, user=editor)
+    # Never suggest deactivated accounts, even if they retain reviewer roles.
+    reviewers = get_reviewer_candidates(article, user=editor).filter(is_active=True)
 
     if author_ids:
         reviewers = reviewers.exclude(pk__in=author_ids)
