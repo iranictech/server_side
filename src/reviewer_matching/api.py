@@ -9,7 +9,7 @@ from submission.models import Article
 
 from .services import get_internal_matches
 from .permissions import enforce_assign_reviewer_policy
-from .coi_records import record_editorial_coi_assessment
+from .coi_records import create_coi_decision
 
 
 @require_GET
@@ -198,6 +198,7 @@ def combined_reviewer_matches(request, article_id):
 
     return JsonResponse(result)
 
+
 @require_POST
 @csrf_protect
 @editor_user_required
@@ -211,7 +212,7 @@ def record_coi_assessment(request, article_id):
     enforce_assign_reviewer_policy(request, article)
 
     try:
-        result = record_editorial_coi_assessment(
+        result = create_coi_decision(
             article,
             editor=request.user,
             reviewer_id=request.POST.get("reviewer_id"),

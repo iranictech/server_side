@@ -19,7 +19,7 @@ VALID_STATUSES = {
 }
 
 
-def record_editorial_coi_assessment(article, *, editor, reviewer_id, status, rationale):
+def create_coi_decision(article, *, editor, reviewer_id, status, rationale):
     """Create one immutable-in-workflow decision for a journal reviewer."""
     try:
         reviewer_pk = int(reviewer_id)
@@ -40,9 +40,8 @@ def record_editorial_coi_assessment(article, *, editor, reviewer_id, status, rat
     if reviewer is None:
         raise ValueError("Reviewer is not eligible for this journal.")
 
-    if not get_reviewer_candidates(article, user=editor).filter(
-        pk=reviewer.pk
-    ).exists():
+    candidates = get_reviewer_candidates(article, user=editor)
+    if not candidates.filter(pk=reviewer.pk).exists():
         raise ValueError("Reviewer is not eligible for this article.")
 
     if article.author_accounts.filter(pk=reviewer.pk).exists():
@@ -56,16 +55,14 @@ def record_editorial_coi_assessment(article, *, editor, reviewer_id, status, rat
     reviewer_email = (reviewer.email or "").strip().casefold()
     reviewer_orcid = normalize_orcid(reviewer.orcid)
     author_emails = frozen_authors.values_list("frozen_email", flat=True)
-    if reviewer_email and any(
-        (email or "").strip().casefold() == reviewer_email for email in author_emails
-    ):
+    normalized_emails = {(email or "").strip().casefold() for email in author_emails}
+    if reviewer_email and reviewer_email in normalized_emails:
         raise ValueError("A matching article-author email blocks COI assessment.")
 
     author_orcids = list(frozen_authors.values_list("frozen_orcid", flat=True))
     author_orcids.extend(article.author_accounts.values_list("orcid", flat=True))
-    if reviewer_orcid and any(
-        normalize_orcid(value) == reviewer_orcid for value in author_orcids
-    ):
+    normalized_orcids = {normalize_orcid(value) for value in author_orcids}
+    if reviewer_orcid and reviewer_orcid in normalized_orcids:
         raise ValueError("A matching article-author ORCID blocks COI assessment.")
 
     # Never overwrite previous decisions: the record history is the audit log.

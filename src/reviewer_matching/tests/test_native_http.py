@@ -698,17 +698,13 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_record_editorial_coi_assessments_are_append_only(self):
         from review.models import ReviewerCOIAssessment
 
-        role, _ = Role.objects.get_or_create(
-            slug="reviewer", defaults={"name": "Reviewer"}
-        )
+        role, _ = Role.objects.get_or_create(slug="reviewer", defaults={"name": "Reviewer"})
         reviewer = Account.objects.create(
             username="coi_audit_reviewer",
             email="coi_audit_reviewer@example.org",
             is_active=True,
         )
-        AccountRole.objects.create(
-            user=reviewer, journal=self.journal_a, role=role
-        )
+        AccountRole.objects.create(user=reviewer, journal=self.journal_a, role=role)
         url = self.url("reviewer_matching_native_coi_assessment")
         payload = {
             "reviewer_id": reviewer.pk,
@@ -736,9 +732,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_coi_recording_rejects_non_editor_and_other_journal(self):
         from review.models import ReviewerCOIAssessment
 
-        role, _ = Role.objects.get_or_create(
-            slug="reviewer", defaults={"name": "Reviewer"}
-        )
+        role, _ = Role.objects.get_or_create(slug="reviewer", defaults={"name": "Reviewer"})
         reviewer = Account.objects.create(
             username="coi_scoped_reviewer",
             email="coi_scoped_reviewer@example.org",
@@ -767,9 +761,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
     def test_coi_recording_rejects_author_and_invalid_status(self):
         from review.models import ReviewerCOIAssessment
 
-        role, _ = Role.objects.get_or_create(
-            slug="reviewer", defaults={"name": "Reviewer"}
-        )
+        role, _ = Role.objects.get_or_create(slug="reviewer", defaults={"name": "Reviewer"})
         reviewer = Account.objects.create(
             username="coi_author_reviewer",
             email="coi_author_reviewer@example.org",
@@ -797,9 +789,7 @@ class NativeReviewerMatchingHTTPTests(TestCase):
         self.assertFalse(ReviewerCOIAssessment.objects.exists())
 
     def test_coi_recording_requires_csrf(self):
-        secure_client = Client(
-            HTTP_HOST="rma.testserver", enforce_csrf_checks=True
-        )
+        secure_client = Client(HTTP_HOST="rma.testserver", enforce_csrf_checks=True)
         secure_client.force_login(self.editor)
         response = secure_client.post(
             self.url("reviewer_matching_native_coi_assessment"),
