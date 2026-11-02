@@ -183,6 +183,20 @@ def discover_external_researchers(
                 if not isinstance(authorships, list):
                     continue
 
+                # Only sampled public work data; no manuscript author data
+                # is included in the OpenAlex request.
+                work_author_orcids = {}
+                for authorship in authorships:
+                    if not isinstance(authorship, dict):
+                        continue
+                    author = authorship.get("author")
+                    if not isinstance(author, dict):
+                        continue
+                    author_id = _extract_id(author.get("id"), AUTHOR_ID_RE)
+                    author_orcid = extract_openalex_orcid(authorship)
+                    if author_id and author_orcid:
+                        work_author_orcids[author_id] = author_orcid
+
                 for authorship in authorships:
                     if not isinstance(authorship, dict):
                         continue
@@ -212,6 +226,7 @@ def discover_external_researchers(
                             "evidence_work_ids": set(),
                             "sampled_publication_years": set(),
                             "orcid_candidates": set(),
+                            "coauthor_orcid_work_ids": {},
                         },
                     )
 
@@ -223,6 +238,13 @@ def discover_external_researchers(
                     record["evidence_work_ids"].add(work_id)
                     if publication_year is not None:
                         record["sampled_publication_years"].add(publication_year)
+
+                    for other_id, other_orcid in work_author_orcids.items():
+                        if other_id == author_id or other_orcid == resolved_orcid:
+                            continue
+                        record["coauthor_orcid_work_ids"].setdefault(
+                            other_orcid, set()
+                        ).add(work_id)
 
     finally:
         if own_session:
@@ -258,6 +280,11 @@ def discover_external_researchers(
                 # Only the searched works are sampled: not a full researcher history.
                 "latest_sampled_publication_year": max(years) if years else None,
                 "activity_status": "not_assessed",
+                # Internal only; combined responses remove this mapping.
+                "_coauthor_orcid_work_ids": {
+                    key: sorted(ids)
+                    for key, ids in record["coauthor_orcid_work_ids"].items()
+                },
                 "identity_verified": False,
                 "coi_status": "not_checked",
                 "invitation_ready": False,

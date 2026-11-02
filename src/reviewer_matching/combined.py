@@ -2,6 +2,7 @@
 
 from .services import get_internal_matches
 from .identity import normalize_orcid, resolve_janeway_orcid
+from .coi import get_article_author_orcids, sampled_coauthorship_evidence
 from .orcid_client import fetch_public_email
 from .openalex import (
     discover_external_researchers,
@@ -55,9 +56,15 @@ def build_combined_matches(
             )
             enriched = []
             duplicate_orcids = _possible_duplicate_orcids(external)
+            author_orcids = (
+                get_article_author_orcids(article)
+                if any(row.get("_coauthor_orcid_work_ids") for row in external)
+                else set()
+            )
 
             for candidate in external:
                 item = dict(candidate)
+                coauthor_work_ids = item.pop("_coauthor_orcid_work_ids", {})
 
                 orcid = normalize_orcid(item.get("orcid"))
 
@@ -85,6 +92,16 @@ def build_combined_matches(
                     if item["possible_duplicate"]
                     else []
                 )
+                evidence = sampled_coauthorship_evidence(
+                    coauthor_work_ids, author_orcids
+                )
+                item["coauthorship_evidence_work_ids"] = evidence
+                item["coi_status"] = (
+                    "potential_coauthorship_conflict"
+                    if evidence
+                    else "manual_review_required"
+                )
+                item["coi_screening_complete"] = False
                 item["identity_verified"] = False
                 item["email"] = None
                 item["email_source"] = None
@@ -98,6 +115,8 @@ def build_combined_matches(
 
                     if item["possible_duplicate"]:
                         item["email_status"] = "manual_identity_review_required"
+                    elif evidence:
+                        item["email_status"] = "manual_coi_review_required"
                     elif allow_orcid_email:
                         # Bound synchronous network calls.
                         # A queued lookup service can replace this later.
@@ -137,6 +156,10 @@ def build_combined_matches(
         "excluded_article_authors": excluded_article_authors,
         "possible_duplicate_external_records": sum(
             item["possible_duplicate"] for item in external
+        ),
+        "potential_coi_external_records": sum(
+            row.get("coi_status") == "potential_coauthorship_conflict"
+            for row in external
         ),
         "orcid_email_lookup_enabled": bool(allow_external and allow_orcid_email),
         "counts": {

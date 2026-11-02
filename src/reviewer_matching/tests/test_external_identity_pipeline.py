@@ -271,3 +271,113 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
             [item["possible_duplicate"] for item in result["results"]["external"]],
             [False, False],
         )
+
+    @patch("reviewer_matching.combined.fetch_public_email")
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch(
+        "reviewer_matching.combined.get_article_author_orcids",
+        return_value={"0000-0001-2345-6789"},
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_sampled_coauthorship_flags_conflict_and_suppresses_email(
+        self, internal, discovery, authors, resolver, email
+    ):
+        discovery.return_value = [
+            {
+                **self.candidate(),
+                "_coauthor_orcid_work_ids": {
+                    "0000-0001-2345-6789": ["W123", "W123"],
+                    "0000-0000-0000-0001": ["W999"],
+                },
+            },
+        ]
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+            allow_orcid_email=True,
+        )
+        row = result["results"]["external"][0]
+
+        self.assertEqual(row["coi_status"], "potential_coauthorship_conflict")
+        self.assertEqual(row["coauthorship_evidence_work_ids"], ["W123"])
+        self.assertNotIn("_coauthor_orcid_work_ids", row)
+        self.assertEqual(row["email_status"], "manual_coi_review_required")
+        self.assertEqual(result["potential_coi_external_records"], 1)
+        self.assertFalse(row["coi_screening_complete"])
+        self.assertFalse(result["coi_screening_complete"])
+        self.assertFalse(row["invitation_ready"])
+        authors.assert_called_once_with(self.article)
+        email.assert_not_called()
+
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="new_external",
+    )
+    @patch(
+        "reviewer_matching.combined.get_article_author_orcids",
+        return_value={"0000-0001-2345-6789"},
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_no_sampled_match_never_means_coi_clearance(
+        self, internal, discovery, authors, resolver
+    ):
+        discovery.return_value = [
+            {
+                **self.candidate(),
+                "_coauthor_orcid_work_ids": {
+                    "0000-0003-0000-0001": ["W321"],
+                },
+            },
+        ]
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+        )
+        row = result["results"]["external"][0]
+
+        self.assertEqual(row["coi_status"], "manual_review_required")
+        self.assertEqual(row["coauthorship_evidence_work_ids"], [])
+        self.assertEqual(result["potential_coi_external_records"], 0)
+        self.assertFalse(row["coi_screening_complete"])
+        self.assertFalse(row["invitation_ready"])
+        authors.assert_called_once()
+
+    @patch("reviewer_matching.combined.get_article_author_orcids")
+    @patch(
+        "reviewer_matching.combined.resolve_janeway_orcid",
+        return_value="article_author",
+    )
+    @patch("reviewer_matching.combined.discover_external_researchers")
+    @patch(
+        "reviewer_matching.combined.get_internal_matches",
+        return_value=[],
+    )
+    def test_article_author_exclusion_is_unchanged(
+        self, internal, discovery, resolver, authors
+    ):
+        discovery.return_value = [self.candidate()]
+        result = build_combined_matches(
+            self.article,
+            self.editor,
+            public_topics=["Statistics"],
+            allow_external=True,
+        )
+
+        self.assertEqual(result["results"]["external"], [])
+        self.assertEqual(result["excluded_article_authors"], 1)
+        authors.assert_not_called()
