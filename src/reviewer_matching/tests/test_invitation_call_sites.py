@@ -226,9 +226,7 @@ class InvitationCallSiteTests(TestCase):
                 "review.logic.notify_helpers.send_email_with_body_from_user"
             ) as mail:
                 with self.assertRaises(PermissionDenied):
-                    logic.send_review_reminder(
-                        request, form, assignment, "request"
-                    )
+                    logic.send_review_reminder(request, form, assignment, "request")
 
         gate.assert_called_once_with(article, reviewer)
         mail.assert_not_called()
@@ -237,9 +235,7 @@ class InvitationCallSiteTests(TestCase):
         reviewer = Mock()
         reviewer.full_name.return_value = "Reviewer"
         assignment = SimpleNamespace(article=object(), reviewer=reviewer)
-        form = SimpleNamespace(
-            cleaned_data={"subject": "Status", "body": "Reminder"}
-        )
+        form = SimpleNamespace(cleaned_data={"subject": "Status", "body": "Reminder"})
         request = SimpleNamespace(user=Mock())
 
         with patch("review.logic.enforce_reviewer_invitation_coi") as gate:
