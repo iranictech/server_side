@@ -182,8 +182,7 @@ class InvitationCallSiteTests(TestCase):
         subscriber = Mock()
         with patch.object(Events, "_hooks", {event: [subscriber]}):
             with patch(
-                "reviewer_matching.invitation_policy."
-                "enforce_reviewer_invitation_coi"
+                "reviewer_matching.invitation_policy.enforce_reviewer_invitation_coi"
             ) as gate:
                 Events.raise_event(event, review_assignment=assignment)
 
@@ -198,8 +197,7 @@ class InvitationCallSiteTests(TestCase):
         subscriber = Mock()
         with patch.object(Events, "_hooks", {event: [subscriber]}):
             with patch(
-                "reviewer_matching.invitation_policy."
-                "enforce_reviewer_invitation_coi"
+                "reviewer_matching.invitation_policy.enforce_reviewer_invitation_coi"
             ) as gate:
                 Events.raise_event(event, sample="legacy")
 
