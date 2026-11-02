@@ -54,3 +54,13 @@ class NativeSuggestionsTests(SimpleTestCase):
             source,
         )
         self.assertIn("Find Reviewers", source)
+
+    def test_duplicate_identity_warning_is_in_editorial_template(self):
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "templates/reviewer_matching/suggestions.html"
+        )
+        source = path.read_text(encoding="utf-8")
+
+        self.assertIn("candidate.possible_duplicate", source)
+        self.assertIn("Possible duplicate OpenAlex records", source)

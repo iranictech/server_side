@@ -222,11 +222,16 @@
                 text(candidate.orcid) || "Not available"
               );
 
-              addCell(
+              const editorialCell = addCell(
                 row,
                 (text(candidate.identity_status) || "not_verified") +
                 " — editorial and COI review required"
               );
+              if (candidate.possible_duplicate === true) {
+                editorialCell.textContent +=
+                  " — Possible duplicate OpenAlex records (shared ORCID); " +
+                  "verify identity manually before any invitation.";
+              }
 
               rows.appendChild(row);
             }
