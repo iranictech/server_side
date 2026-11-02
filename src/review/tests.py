@@ -302,6 +302,9 @@ class ReviewTests(TestCase):
         assignment.save()
 
         self.client.force_login(self.editor)
+        session = self.client.session
+        session["janeway_active_roles"] = {str(self.journal_one.pk): "editor"}
+        session.save()
         decline_url = reverse(
             "review_decision", kwargs={"article_id": article1.pk, "decision": "decline"}
         )
@@ -310,16 +313,6 @@ class ReviewTests(TestCase):
             SERVER_NAME=self.journal_one.domain,
         )
         msg = "The following incomplete reviews will be marked as withdrawn"
-        if response.status_code == 403:
-            req = response.wsgi_request
-            print("ROLE_DEBUG", getattr(req, "active_role_slug", None))
-            print("JOURNAL_DEBUG", getattr(req.journal, "code", None))
-            print("ACTIVE_DEBUG", req.user.is_active)
-            print("EDITOR_DEBUG", req.user.is_editor(req))
-            print(
-                "ASSIGNED_ROLE_DEBUG",
-                self.editor.roles_for_journal(self.journal_one),
-            )
         self.assertContains(response, msg)
 
         data = {
