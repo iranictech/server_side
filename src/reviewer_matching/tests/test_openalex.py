@@ -285,5 +285,6 @@ class OpenAlexTests(unittest.TestCase):
             ["0000-0002-1825-0097"],
         )
 
+
 if __name__ == "__main__":
     unittest.main()
