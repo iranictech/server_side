@@ -316,7 +316,10 @@ class ReviewTests(TestCase):
             print("JOURNAL_DEBUG", getattr(req.journal, "code", None))
             print("ACTIVE_DEBUG", req.user.is_active)
             print("EDITOR_DEBUG", req.user.is_editor(req))
-            print("ASSIGNED_ROLE_DEBUG", self.editor.roles_for_journal(self.journal_one))
+            print(
+                "ASSIGNED_ROLE_DEBUG",
+                self.editor.roles_for_journal(self.journal_one),
+            )
         self.assertContains(response, msg)
 
         data = {
