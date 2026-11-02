@@ -311,26 +311,12 @@ class ReviewTests(TestCase):
         )
         msg = "The following incomplete reviews will be marked as withdrawn"
         if response.status_code == 403:
-            denied_request = response.wsgi_request
-            details = {
-                "selected_role": getattr(
-                    denied_request, "active_role_slug", None
-                ),
-                "journal": getattr(
-                    getattr(denied_request, "journal", None), "code", None
-                ),
-                "user_active": denied_request.user.is_active,
-                "is_editor": denied_request.user.is_editor(denied_request),
-                "assigned_roles": list(
-                    self.editor.accountrole_set.filter(
-                        journal=self.journal_one
-                    ).values_list("role__slug", flat=True)
-                ),
-                "editor_is_author": (
-                    denied_request.user in article1.author_accounts
-                ),
-            }
-            self.fail(f"Diagnostic: decision denied; {details}")
+            req = response.wsgi_request
+            print("ROLE_DEBUG", getattr(req, "active_role_slug", None))
+            print("JOURNAL_DEBUG", getattr(req.journal, "code", None))
+            print("ACTIVE_DEBUG", req.user.is_active)
+            print("EDITOR_DEBUG", req.user.is_editor(req))
+            print("ASSIGNED_ROLE_DEBUG", self.editor.roles_for_journal(self.journal_one))
         self.assertContains(response, msg)
 
         data = {
