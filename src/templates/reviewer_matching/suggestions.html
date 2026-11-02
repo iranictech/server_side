@@ -27,6 +27,7 @@
             <th>Matching Keywords</th>
             <th>Active Reviews</th>
             <th>Evidence</th>
+            <th>Editorial COI review</th>
           </tr>
         </thead>
         <tbody>
@@ -40,10 +41,63 @@
               {{ candidate.active_reviews|default_if_none:"Unknown" }}
             </td>
             <td>{{ candidate.expertise_evidence }}</td>
+            <td>
+              {% if candidate.latest_coi_assessment %}
+                <p>
+                  Last editorial COI decision:
+                  <strong>{{ candidate.latest_coi_assessment.status }}</strong>
+                </p>
+                <p>
+                  {{ candidate.latest_coi_assessment.rationale }}
+                </p>
+              {% else %}
+                <p>COI decision not yet recorded.</p>
+              {% endif %}
+
+              {% if candidate.account_id %}
+                <form
+                  method="post"
+                  action="{% url 'reviewer_matching_native_coi_assessment' article.pk %}">
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="reviewer_id"
+                    value="{{ candidate.account_id }}">
+
+                  <label for="coi-status-{{ candidate.account_id }}">Decision</label>
+                  <select
+                    id="coi-status-{{ candidate.account_id }}"
+                    name="status"
+                    required>
+                    <option value="">Select decision</option>
+                    <option value="cleared">No apparent conflict</option>
+                    <option value="conflict">Conflict identified</option>
+                    <option value="uncertain">Further review required</option>
+                  </select>
+
+                  <label for="coi-rationale-{{ candidate.account_id }}">
+                    Editorial rationale
+                  </label>
+                  <textarea
+                    id="coi-rationale-{{ candidate.account_id }}"
+                    name="rationale"
+                    rows="2"
+                    minlength="10"
+                    maxlength="2000"
+                    required></textarea>
+                  <button type="submit" class="button small secondary">
+                    Record COI assessment
+                  </button>
+                </form>
+                <small>
+                  Recording a decision does not automatically invite the reviewer.
+                </small>
+              {% endif %}
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="4">
+            <td colspan="5">
               No internal reviewer candidates were found.
             </td>
           </tr>

@@ -87,3 +87,16 @@ class NativeSuggestionsTests(SimpleTestCase):
         self.assertIn("candidate.coauthorship_evidence_work_ids", source)
         self.assertIn("potential_coauthorship_conflict", source)
         self.assertIn("missing evidence does not", source)
+
+    def test_internal_coi_form_is_csrf_protected_and_explicit(self):
+        path = (
+            Path(__file__).resolve().parents[2]
+            / "templates/reviewer_matching/suggestions.html"
+        )
+        source = path.read_text(encoding="utf-8")
+
+        self.assertIn("reviewer_matching_native_coi_assessment", source)
+        self.assertIn("{% csrf_token %}", source)
+        self.assertIn('name="rationale"', source)
+        self.assertIn("Last editorial COI decision", source)
+        self.assertIn("does not automatically invite the reviewer", source)

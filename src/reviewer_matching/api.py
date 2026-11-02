@@ -1,5 +1,6 @@
 from django.http import JsonResponse, Http404
-from django.shortcuts import get_object_or_404
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_GET
 
 from security.decorators import (
@@ -221,6 +222,12 @@ def record_coi_assessment(request, article_id):
         )
     except ValueError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
+
+    # Native HTML form users return to the editor's suggestions page.
+    # API clients still receive the machine-readable 201 response.
+    if "text/html" in request.headers.get("Accept", ""):
+        messages.success(request, "Editorial COI assessment recorded.")
+        return redirect("reviewer_matching_native_suggestions", article_id=article.pk)
 
     return JsonResponse(
         {

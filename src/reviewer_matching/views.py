@@ -13,6 +13,7 @@ from security.decorators import (
     editor_user_required,
 )
 from submission.models import Article
+from review.models import ReviewerCOIAssessment
 
 from reviewer_matching.permissions import (
     enforce_assign_reviewer_policy,
@@ -67,6 +68,24 @@ def suggestions_page(request, article_id):
         article,
         request.user,
     )
+
+    # Show only the latest editorial decision; older rows stay in the
+    # append-only database history. No decision implies invitation approval.
+    candidate_ids = {
+        item.get("account_id") for item in candidates if item.get("account_id")
+    }
+    latest = {}
+    if candidate_ids:
+        history = ReviewerCOIAssessment.objects.filter(
+            article=article,
+            reviewer_id__in=candidate_ids,
+        ).order_by("-recorded_at", "-pk")
+        for assessment in history:
+            latest.setdefault(assessment.reviewer_id, assessment)
+
+    for candidate in candidates:
+        assessment = latest.get(candidate.get("account_id"))
+        candidate["latest_coi_assessment"] = assessment
 
     return render(
         request,
