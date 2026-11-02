@@ -6,8 +6,9 @@ from reviewer_matching.services import get_internal_matches
 
 
 class FakeReviewer:
-    def __init__(self, pk, email="", orcid="", interests=(), load=0):
+    def __init__(self, pk, email="", orcid="", interests=(), load=0, is_active=True):
         self.pk = pk
+        self.is_active = is_active
         self.email = email
         self.orcid = orcid
         self.active_reviews_count = load
@@ -34,6 +35,10 @@ class FakeQuerySet:
         return FakeQuerySet(
             [item for item in self.items if getattr(item, field) not in excluded]
         )
+
+    def filter(self, **kwargs):
+        assert kwargs == {"is_active": True}
+        return FakeQuerySet([item for item in self.items if item.is_active])
 
     def distinct(self):
         by_pk = {}
@@ -134,6 +139,17 @@ class InternalReviewerServiceTests(unittest.TestCase):
 
         result = execute_match(article, reviewers, frozen)
         self.assertEqual([item["account_id"] for item in result], [4])
+
+    def test_inactive_accounts_are_never_suggested(self):
+        article = make_article(words=["Artificial Intelligence"])
+        reviewers = [
+            FakeReviewer(1, interests=["Artificial Intelligence"], is_active=False),
+            FakeReviewer(2, interests=["Artificial Intelligence"]),
+        ]
+
+        result = execute_match(article, reviewers)
+
+        self.assertEqual([item["account_id"] for item in result], [2])
 
     def test_keyword_matching_is_case_insensitive(self):
         article = make_article(words=["Machine Learning"])
