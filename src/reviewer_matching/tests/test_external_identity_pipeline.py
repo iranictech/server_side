@@ -193,9 +193,7 @@ class ExternalIdentityPipelineTests(unittest.TestCase):
                 item["identity_warnings"],
                 ["shared_orcid_across_openalex_profiles"],
             )
-            self.assertEqual(
-                item["email_status"], "manual_identity_review_required"
-            )
+            self.assertEqual(item["email_status"], "manual_identity_review_required")
             self.assertFalse(item["identity_verified"])
             self.assertFalse(item["invitation_ready"])
         email.assert_not_called()
