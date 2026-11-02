@@ -41,6 +41,7 @@ jobs:
       - name: Check code formatting with Ruff
         run: |
           echo "Running formatting check..."
+          ruff format --diff src/reviewer_matching/tests/test_invitation_call_sites.py
           ruff format --check .
           echo "Formatting check completed."
 
