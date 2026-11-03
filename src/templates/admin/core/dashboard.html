@@ -14,6 +14,64 @@
     <section>
        {% include "admin/elements/no_stage.html" %}
 
+<!-- UA REAL OVERVIEW V1 -->
+{% if ua_overview_enabled %}
+<section class="ua-real-overview" aria-label="Journal overview">
+  <div class="ua-real-heading">
+    <div>
+      <span class="ua-real-eyebrow">JOURNAL MANAGEMENT</span>
+      <h2>Dashboard Overview</h2>
+      <p>Monitor articles, reviews and editorial activity.</p>
+    </div>
+  </div>
+
+  <div class="ua-real-grid">
+    <div class="ua-real-card">
+      <span>Total Articles</span>
+      <strong>{{ ua_total_articles_count }}</strong>
+      <small>Journal submissions</small>
+    </div>
+    <div class="ua-real-card">
+      <span>Under Review</span>
+      <strong>{{ ua_under_review_count }}</strong>
+      <small>Manuscripts in peer review</small>
+    </div>
+    <div class="ua-real-card">
+      <span>Completed Reviews</span>
+      <strong>{{ ua_completed_reviews_count }}</strong>
+      <small>Completed review assignments</small>
+    </div>
+  </div>
+
+  <div class="ua-real-table">
+    <h3>Recent Articles</h3>
+    <div class="ua-real-table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Manuscript</th>
+            <th>Status</th>
+            <th>Date Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for article in ua_recent_articles %}
+          <tr>
+            <td>{{ article.safe_title|striptags|truncatechars:90 }}</td>
+            <td>{{ article.get_stage_display }}</td>
+            <td>{{ article.date_submitted|date:"Y-m-d" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">No articles available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
         <div class="row expanded" data-equalizer data-equalize-on="medium">
             {% include "admin/elements/core/editor_dashboard.html" %}
         </div>

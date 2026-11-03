@@ -302,6 +302,9 @@ class ReviewTests(TestCase):
         assignment.save()
 
         self.client.force_login(self.editor)
+        session = self.client.session
+        session["janeway_active_roles"] = {str(self.journal_one.pk): "editor"}
+        session.save()
         decline_url = reverse(
             "review_decision", kwargs={"article_id": article1.pk, "decision": "decline"}
         )
@@ -639,6 +642,7 @@ class ReviewTests(TestCase):
             "editoruser@martineve.com", ["editor"], journal=self.journal_one
         )
         self.editor.is_active = True
+        self.editor.save()
         self.reviewer = self.create_user(
             "revieweruser@email.com", ["reviewer"], journal=self.journal_one
         )

@@ -3,6 +3,8 @@ __author__ = "Andy Byers, Mauro Sanchez & Joseph Muller"
 __license__ = "AGPL v3"
 __maintainer__ = "Birkbeck Centre for Technology and Publishing"
 
+import tempfile
+
 import mock
 from django.test import TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -50,13 +52,16 @@ class TestModels(TestCase):
             title="Preprint Number Two",
         )
 
-    @override_settings(BASE_DIR="/tmp/")
     def test_create_article(self):
         preprint_file = SimpleUploadedFile(
             "test1.txt",
             b"these are the file contents!",  # note the b in front of the string [bytes]
         )
-        with mock.patch("core.file_system.JanewayFileSystemStorage.location", "/tmp/"):
+        with (
+            tempfile.TemporaryDirectory(prefix="janeway-repo-test-") as temp_dir,
+            mock.patch("core.file_system.JanewayFileSystemStorage.location", temp_dir),
+            override_settings(BASE_DIR=temp_dir),
+        ):
             preprint_one_version_file = rm.PreprintFile.objects.create(
                 preprint=self.preprint_one,
                 file=preprint_file,
@@ -95,7 +100,11 @@ class TestModels(TestCase):
             "test1.txt",
             b"these are the file contents!",  # note the b in front of the string [bytes]
         )
-        with mock.patch("core.file_system.JanewayFileSystemStorage.location", "/tmp/"):
+        with (
+            tempfile.TemporaryDirectory(prefix="janeway-repo-test-") as temp_dir,
+            mock.patch("core.file_system.JanewayFileSystemStorage.location", temp_dir),
+            override_settings(BASE_DIR=temp_dir),
+        ):
             preprint_one_version_file = rm.PreprintFile.objects.create(
                 preprint=self.preprint_one,
                 file=preprint_file,

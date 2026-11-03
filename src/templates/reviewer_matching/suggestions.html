@@ -1,0 +1,409 @@
+{% extends "admin/core/base.html" %}
+{% load i18n %}
+
+{% block title %}Intelligent Reviewer Matching{% endblock %}
+{% block title-section %}Intelligent Reviewer Matching{% endblock %}
+
+{% block body %}
+<div class="large-12 columns">
+  <div class="box">
+    <div class="title-area">
+      <h2>Suggested Reviewers</h2>
+    </div>
+    <div class="content">
+      <p>
+        Recommendations for:
+        <strong>{{ article.title }}</strong>
+      </p>
+      <p>
+        Internal Janeway candidates are prioritized.
+        All recommendations require editorial review.
+      </p>
+
+      <table class="small scroll">
+        <thead>
+          <tr>
+            <th>Researcher</th>
+            <th>Matching Keywords</th>
+            <th>Active Reviews</th>
+            <th>Evidence</th>
+            <th>Editorial COI review</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for candidate in candidates %}
+          <tr>
+            <td>{{ candidate.name }}</td>
+            <td>
+              {{ candidate.matched_keywords|join:", "|default:"No exact match" }}
+            </td>
+            <td>
+              {{ candidate.active_reviews|default_if_none:"Unknown" }}
+            </td>
+            <td>{{ candidate.expertise_evidence }}</td>
+            <td>
+              {% if candidate.latest_coi_assessment %}
+                <p>
+                  Last editorial COI decision:
+                  <strong>{{ candidate.latest_coi_assessment.status }}</strong>
+                </p>
+                <p>
+                  {{ candidate.latest_coi_assessment.rationale }}
+                </p>
+              {% else %}
+                <p>COI decision not yet recorded.</p>
+              {% endif %}
+
+              {% if candidate.account_id %}
+                <form
+                  method="post"
+                  action="{% url 'reviewer_matching_native_coi_assessment' article.pk %}">
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="reviewer_id"
+                    value="{{ candidate.account_id }}">
+
+                  <label for="coi-status-{{ candidate.account_id }}">Decision</label>
+                  <select
+                    id="coi-status-{{ candidate.account_id }}"
+                    name="status"
+                    required>
+                    <option value="">Select decision</option>
+                    <option value="cleared">No apparent conflict</option>
+                    <option value="conflict">Conflict identified</option>
+                    <option value="uncertain">Further review required</option>
+                  </select>
+
+                  <label for="coi-rationale-{{ candidate.account_id }}">
+                    Editorial rationale
+                  </label>
+                  <textarea
+                    id="coi-rationale-{{ candidate.account_id }}"
+                    name="rationale"
+                    rows="2"
+                    minlength="10"
+                    maxlength="2000"
+                    required></textarea>
+                  <button type="submit" class="button small secondary">
+                    Record COI assessment
+                  </button>
+                </form>
+                <small>
+                  Recording a decision does not automatically invite the reviewer.
+                </small>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">
+              No internal reviewer candidates were found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+
+        <hr>
+        <section aria-labelledby="rm-external-title">
+          <h3 id="rm-external-title">
+            External Researchers — OpenAlex
+          </h3>
+
+          <p>
+            These researchers are suggestions, not approved reviewers.
+            Editorial verification and conflict-of-interest checks
+            are still required. Publication years reflect only the
+            sampled search results, not a complete publication history
+            or proof of current research activity. Coauthorship alerts
+            use sampled public works only: missing evidence does not
+            clear a conflict. Editors must still check affiliation,
+            funding, personal and other potential conflicts manually.
+            No invitation is sent automatically.
+          </p>
+
+          <h4>Article-derived search topics</h4>
+
+          {% if article_topics %}
+            <ul id="rm-article-topics">
+              {% for topic in article_topics %}
+                <li>{{ topic }}</li>
+              {% endfor %}
+            </ul>
+
+            <p>
+              Only the displayed keywords will be proposed for
+              OpenAlex discovery. The title, abstract and full
+              manuscript are not part of this request.
+            </p>
+
+            {% if external_enabled %}
+              <form
+                id="rm-openalex-form"
+                method="post"
+                action="{% url 'reviewer_matching_native_combined' article.pk %}">
+                {% csrf_token %}
+
+                <label for="rm-openalex-consent">
+                  <input
+                    id="rm-openalex-consent"
+                    type="checkbox"
+                    required>
+                  I approve disclosing the displayed article
+                  keywords to OpenAlex.
+                </label>
+
+                <p>
+                  <button
+                    id="rm-openalex-submit"
+                    class="button"
+                    type="submit"
+                    disabled>
+                    Search OpenAlex
+                  </button>
+                </p>
+              </form>
+            {% else %}
+              <p id="rm-external-disabled">
+                OpenAlex discovery is disabled by the administrator.
+                No external request can be initiated from this page.
+              </p>
+            {% endif %}
+
+          {% else %}
+            <p id="rm-no-topics">
+              No eligible article keywords are available
+              for OpenAlex discovery.
+            </p>
+          {% endif %}
+
+          <p id="rm-openalex-status"
+             role="status"
+             aria-live="polite">
+            No external search has been made.
+          </p>
+
+          <table id="rm-openalex-results"
+                 class="small scroll"
+                 hidden>
+            <thead>
+              <tr>
+                <th>Researcher</th>
+                <th>OpenAlex ID</th>
+                <th>Matched Topics</th>
+                <th>Evidence Works</th>
+                <th>Latest Year in Sample</th>
+                <th>ORCID</th>
+                <th>COI Evidence</th>
+                <th>Editorial Status</th>
+              </tr>
+            </thead>
+            <tbody id="rm-openalex-rows"></tbody>
+          </table>
+        </section>
+
+        <script>
+        (function () {
+          "use strict";
+
+          const form = document.getElementById("rm-openalex-form");
+          if (!form) return;
+
+          const consent = document.getElementById("rm-openalex-consent");
+          const button = document.getElementById("rm-openalex-submit");
+          const status = document.getElementById("rm-openalex-status");
+          const table = document.getElementById("rm-openalex-results");
+          const rows = document.getElementById("rm-openalex-rows");
+
+          // Capture the exact topics displayed to the editor.
+          const approvedTopics = Array.from(
+            document.querySelectorAll("#rm-article-topics li"),
+            item => item.textContent.trim()
+          );
+
+          const text = (value) =>
+            typeof value === "string" ? value : "";
+
+          const joined = (value) =>
+            Array.isArray(value)
+              ? value.filter(v => typeof v === "string").join(", ")
+              : "";
+
+          function addCell(row, value) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+            return cell;
+          }
+
+          function render(external) {
+            rows.replaceChildren();
+            table.hidden = true;
+
+            if (!Array.isArray(external) || !external.length) {
+              status.textContent = "No external researchers were found.";
+              return;
+            }
+
+            for (const candidate of external) {
+              if (!candidate || typeof candidate !== "object") continue;
+
+              const row = document.createElement("tr");
+
+              addCell(
+                row,
+                text(candidate.name) || "Unknown researcher"
+              );
+
+              const id = text(candidate.openalex_id);
+              const idCell = addCell(row, "Unavailable");
+
+              if (/^A[0-9]+$/.test(id)) {
+                const link = document.createElement("a");
+                link.href = "https://openalex.org/" + id;
+                link.textContent = id;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                idCell.replaceChildren(link);
+              }
+
+              addCell(
+                row,
+                joined(candidate.matched_public_topics) || "Not specified"
+              );
+
+              addCell(
+                row,
+                joined(candidate.evidence_work_ids) || "Not available"
+              );
+
+              addCell(
+                row,
+                Number.isInteger(candidate.latest_sampled_publication_year)
+                  ? String(candidate.latest_sampled_publication_year)
+                  : "Not available"
+              );
+
+              addCell(
+                row,
+                text(candidate.orcid) || "Not available"
+              );
+
+              const evidence = joined(candidate.coauthorship_evidence_work_ids);
+              addCell(
+                row,
+                candidate.coi_status === "potential_coauthorship_conflict"
+                  ? "Potential manuscript-author coauthorship: " +
+                    (evidence || "verify manually")
+                  : "No sampled match; manual COI review required"
+              );
+
+              const editorialCell = addCell(
+                row,
+                (text(candidate.identity_status) || "not_verified") +
+                " — editorial and COI review required"
+              );
+              if (candidate.possible_duplicate === true) {
+                editorialCell.textContent +=
+                  " — Possible duplicate OpenAlex records (shared ORCID); " +
+                  "verify identity manually before any invitation.";
+              }
+
+              rows.appendChild(row);
+            }
+
+            if (!rows.children.length) {
+              status.textContent = "No valid researcher records.";
+              return;
+            }
+
+            table.hidden = false;
+            status.textContent =
+              rows.children.length +
+              " external suggestion(s). None are approved reviewers.";
+          }
+
+          consent.addEventListener("change", function () {
+            button.disabled = !consent.checked;
+          });
+
+          form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            if (!consent.checked || button.disabled) return;
+
+            const csrf = form.querySelector(
+              'input[name="csrfmiddlewaretoken"]'
+            );
+
+            if (!csrf) {
+              status.textContent = "CSRF token unavailable.";
+              return;
+            }
+
+            button.disabled = true;
+            rows.replaceChildren();
+            table.hidden = true;
+            status.textContent = "Searching OpenAlex...";
+
+            try {
+              const response = await fetch(form.action, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                  "X-CSRFToken": csrf.value
+                },
+                body: JSON.stringify({
+                  use_article_keywords: true,
+                  public_topics_approved: true,
+                  approved_article_topics: approvedTopics,
+                  internal_limit: 20,
+                  external_limit: 15
+                })
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(
+                  text(data.error) || "The request was rejected."
+                );
+              }
+
+              if (data.external_status === "disabled") {
+                status.textContent =
+                  "OpenAlex discovery is disabled by the administrator.";
+              } else if (data.external_status === "unavailable") {
+                status.textContent =
+                  "OpenAlex is unavailable. Internal suggestions remain available.";
+              } else if (data.external_status === "completed") {
+                render(data.results && data.results.external);
+              } else {
+                status.textContent = "External discovery not completed.";
+              }
+
+            } catch (error) {
+              table.hidden = true;
+              status.textContent =
+                "External discovery failed: " +
+                (error instanceof Error ? error.message : "Unknown error");
+            } finally {
+              button.disabled = !consent.checked;
+            }
+          });
+        })();
+        </script>
+
+
+      <a class="button secondary"
+         href="{% url 'review_in_review' article.pk %}">
+        Back to Review Management
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock body %}

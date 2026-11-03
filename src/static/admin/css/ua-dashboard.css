@@ -1,0 +1,862 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600;700&display=swap");
+
+/* =========================================================
+   UA Dashboard Visual Redesign V2
+   Scope: only body.ua-dashboard
+   ========================================================= */
+
+body.ua-dashboard {
+    --ua-bg: #f5f6f8;
+    --ua-surface: #ffffff;
+    --ua-surface-soft: #fbfbfc;
+    --ua-sidebar: #13284d;
+    --ua-sidebar-2: #17325f;
+    --ua-border: #e3e6ea;
+    --ua-text: #24344d;
+    --ua-text-soft: #6f7d90;
+    --ua-heading: #2b2b2b;
+    --ua-accent: #c6943a;
+    --ua-accent-dark: #9f7429;
+    --ua-accent-soft: #e7d5af;
+    --ua-success: #2e8b57;
+    --ua-danger: #c94c42;
+    --ua-warning: #c28728;
+    --ua-radius: 14px;
+    --ua-radius-sm: 10px;
+    --ua-shadow: 0 8px 24px rgba(16, 24, 40, .04);
+
+    background: var(--ua-bg);
+    color: var(--ua-text);
+}
+
+/* ---------- page shell ---------- */
+
+body.ua-dashboard .off-canvas-content,
+body.ua-dashboard .content.large-12.columns,
+body.ua-dashboard .grid-container,
+body.ua-dashboard .grid-x {
+    background: var(--ua-bg);
+}
+
+body.ua-dashboard .content {
+    padding-bottom: 28px;
+}
+
+/* ---------- sidebar ---------- */
+
+body.ua-dashboard .ua-admin-sidebar {
+    background: linear-gradient(180deg, var(--ua-sidebar) 0%, #102240 100%);
+    border-right: 0;
+    box-shadow: none;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu {
+    padding: 12px 10px 24px;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li.title {
+    margin-bottom: 18px;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li.title > a {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 14px 12px;
+    border-radius: 12px;
+    background: transparent;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li.subtitle {
+    margin-top: 20px;
+    margin-bottom: 6px;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li.subtitle > a {
+    color: rgba(255,255,255,.62);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    background: transparent;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li:not(.title):not(.subtitle) > a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 4px 0;
+    padding: 11px 14px;
+    color: rgba(255,255,255,.92);
+    background: transparent;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li:not(.title):not(.subtitle) > a:hover,
+body.ua-dashboard .ua-admin-sidebar .vertical.menu > li:not(.title):not(.subtitle) > a:focus-visible {
+    background: rgba(255,255,255,.06);
+    color: #ffffff;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu a[aria-current="page"],
+body.ua-dashboard .ua-admin-sidebar .vertical.menu li.is-active > a,
+body.ua-dashboard .ua-admin-sidebar .vertical.menu li.active > a {
+    background: var(--ua-accent) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+body.ua-dashboard .ua-admin-sidebar .vertical.menu .fa,
+body.ua-dashboard .ua-admin-sidebar .vertical.menu .icon {
+    width: 18px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* ---------- topbar ---------- */
+
+body.ua-dashboard .ua-admin-topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--ua-border);
+    box-shadow: none;
+}
+
+body.ua-dashboard .ua-admin-topbar .row.expanded {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+body.ua-dashboard .ua-admin-topbar h1,
+body.ua-dashboard .ua-admin-topbar h1 a {
+    color: var(--ua-heading);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+body.ua-dashboard #profile-dropdown {
+    background: #ffffff;
+    border: 1px solid var(--ua-border);
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(16, 24, 40, .08);
+}
+
+body.ua-dashboard #profile-dropdown a,
+body.ua-dashboard #profile-dropdown button {
+    color: var(--ua-text);
+    font-size: 14px;
+}
+
+/* ---------- breadcrumbs & page heading ---------- */
+
+body.ua-dashboard .breadcrumbs {
+    background: transparent;
+    border: 0;
+    margin: 10px 0 0;
+    padding: 10px 0 0;
+}
+
+body.ua-dashboard .breadcrumbs li,
+body.ua-dashboard .breadcrumbs a {
+    color: #9aa4b2;
+    font-size: 12px;
+}
+
+body.ua-dashboard .content > section.title,
+body.ua-dashboard .content > .title {
+    background: transparent;
+    border: 0;
+    padding: 6px 0 14px;
+}
+
+body.ua-dashboard .content > section.title h1,
+body.ua-dashboard .content > .title h1,
+body.ua-dashboard .content > h1 {
+    color: #2d2d2d;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+
+body.ua-dashboard .content > section.title p,
+body.ua-dashboard .content > .title p {
+    color: var(--ua-text-soft);
+}
+
+/* ---------- cards / boxes ---------- */
+
+body.ua-dashboard .box,
+body.ua-dashboard .card,
+body.ua-dashboard .panel {
+    background: var(--ua-surface);
+    border: 1px solid var(--ua-border);
+    border-radius: var(--ua-radius);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+body.ua-dashboard .box .title-area,
+body.ua-dashboard .card .title-area,
+body.ua-dashboard .panel .title-area {
+    background: #ffffff;
+    border-bottom: 1px solid var(--ua-border);
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+body.ua-dashboard .box .title-area h2,
+body.ua-dashboard .box h2,
+body.ua-dashboard .card h2,
+body.ua-dashboard .panel h2 {
+    color: #313131;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+/* ---------- summary / stats ---------- */
+
+body.ua-dashboard .summary,
+body.ua-dashboard .summaries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+body.ua-dashboard .summary > *,
+body.ua-dashboard .summaries > * {
+    min-width: 170px;
+    background: #ffffff;
+    border: 1px solid var(--ua-border);
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+    box-shadow: none;
+}
+
+body.ua-dashboard .summary > *:nth-child(1),
+body.ua-dashboard .summary > *:nth-child(2) {
+    background: #ead7ad;
+    border-color: #e1ca9a;
+}
+
+body.ua-dashboard .summary .title,
+body.ua-dashboard .summary .label,
+body.ua-dashboard .summary .heading {
+    color: #645847;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+body.ua-dashboard .summary .stat,
+body.ua-dashboard .summary strong,
+body.ua-dashboard .summary .number {
+    display: block;
+    margin-top: 10px;
+    color: #2e2e2e;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- sections ---------- */
+
+body.ua-dashboard .box + .box,
+body.ua-dashboard .panel + .panel,
+body.ua-dashboard .card + .card {
+    margin-top: 20px;
+}
+
+body.ua-dashboard .section,
+body.ua-dashboard section {
+    border-radius: var(--ua-radius);
+}
+
+body.ua-dashboard .section-header,
+body.ua-dashboard .module-title {
+    color: #3c3c3c;
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+/* ---------- tables ---------- */
+
+body.ua-dashboard table {
+    width: 100%;
+    background: #ffffff;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+body.ua-dashboard table thead,
+body.ua-dashboard table thead tr {
+    background: #fafafb;
+}
+
+body.ua-dashboard table th {
+    color: #626f83;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+body.ua-dashboard table th,
+body.ua-dashboard table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--ua-border);
+    vertical-align: middle;
+}
+
+body.ua-dashboard table tbody tr:hover {
+    background: #fafbfd;
+}
+
+body.ua-dashboard .dataTables_wrapper,
+body.ua-dashboard .datatable-container {
+    padding-top: 6px;
+}
+
+body.ua-dashboard .dataTables_length,
+body.ua-dashboard .dataTables_filter {
+    margin-bottom: 12px;
+    color: var(--ua-text-soft);
+    font-size: 13px;
+}
+
+body.ua-dashboard .dataTables_filter input,
+body.ua-dashboard .dataTables_length select {
+    min-height: 40px;
+}
+
+/* ---------- buttons ---------- */
+
+body.ua-dashboard .button,
+body.ua-dashboard button,
+body.ua-dashboard input[type="submit"],
+body.ua-dashboard .btn {
+    border: 0;
+    border-radius: 10px;
+    background: var(--ua-accent);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: none;
+    transition: background-color .15s ease, transform .15s ease;
+}
+
+body.ua-dashboard .button:hover,
+body.ua-dashboard button:hover,
+body.ua-dashboard input[type="submit"]:hover,
+body.ua-dashboard .btn:hover {
+    background: var(--ua-accent-dark);
+    color: #ffffff;
+}
+
+body.ua-dashboard .button.secondary,
+body.ua-dashboard .btn.secondary {
+    background: #eef1f4;
+    color: var(--ua-text);
+}
+
+/* ---------- form controls ---------- */
+
+body.ua-dashboard input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+body.ua-dashboard select,
+body.ua-dashboard textarea {
+    min-height: 42px;
+    border: 1px solid #d7dce3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--ua-text);
+    box-shadow: none;
+}
+
+body.ua-dashboard textarea {
+    min-height: 110px;
+}
+
+body.ua-dashboard input:focus,
+body.ua-dashboard select:focus,
+body.ua-dashboard textarea:focus {
+    border-color: var(--ua-accent);
+    outline: 2px solid rgba(198, 148, 58, .16);
+    outline-offset: 1px;
+}
+
+/* ---------- badges / statuses ---------- */
+
+body.ua-dashboard .success,
+body.ua-dashboard .label.success {
+    color: var(--ua-success);
+}
+
+body.ua-dashboard .warning,
+body.ua-dashboard .label.warning {
+    color: var(--ua-warning);
+}
+
+body.ua-dashboard .alert,
+body.ua-dashboard .label.alert,
+body.ua-dashboard .error {
+    color: var(--ua-danger);
+}
+
+/* ---------- pagination ---------- */
+
+body.ua-dashboard .pagination a,
+body.ua-dashboard .pagination button,
+body.ua-dashboard .paginate_button {
+    border-radius: 10px !important;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1100px) {
+    body.ua-dashboard .summary > *,
+    body.ua-dashboard .summaries > * {
+        min-width: calc(50% - 8px);
+    }
+}
+
+@media (max-width: 800px) {
+    body.ua-dashboard .summary,
+    body.ua-dashboard .summaries {
+        flex-direction: column;
+    }
+
+    body.ua-dashboard .summary > *,
+    body.ua-dashboard .summaries > * {
+        min-width: 100%;
+    }
+
+    body.ua-dashboard .content > section.title h1,
+    body.ua-dashboard .content > .title h1,
+    body.ua-dashboard .content > h1 {
+        font-size: 24px;
+    }
+}
+
+/* ---------- accessibility ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    body.ua-dashboard * {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* UA V2 FONT AND OVERVIEW FIX */
+
+/* Typography */
+body.ua-dashboard,
+body.ua-dashboard h1,
+body.ua-dashboard h2,
+body.ua-dashboard h3,
+body.ua-dashboard h4,
+body.ua-dashboard h5,
+body.ua-dashboard h6,
+body.ua-dashboard p,
+body.ua-dashboard a,
+body.ua-dashboard table,
+body.ua-dashboard th,
+body.ua-dashboard td,
+body.ua-dashboard input,
+body.ua-dashboard button,
+body.ua-dashboard select,
+body.ua-dashboard textarea,
+body.ua-dashboard .button {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-optical-sizing: auto;
+}
+
+/* Real dashboard overview */
+body.ua-dashboard .ua-real-overview {
+    padding: 12px 16px 30px;
+}
+
+body.ua-dashboard .ua-real-heading {
+    margin-bottom: 24px;
+}
+
+body.ua-dashboard .ua-real-eyebrow {
+    color: #9f7429;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+}
+
+body.ua-dashboard .ua-real-heading h2 {
+    margin: 10px 0;
+    color: #24344d;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+body.ua-dashboard .ua-real-heading p {
+    color: #6f7d90;
+}
+
+body.ua-dashboard .ua-real-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+body.ua-dashboard .ua-real-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 22px;
+    border: 1px solid #e3e6ea;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+body.ua-dashboard .ua-real-card span {
+    color: #6f7d90;
+    font-size: 13px;
+}
+
+body.ua-dashboard .ua-real-card strong {
+    margin: 14px 0;
+    color: #24344d;
+    font-size: 34px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+body.ua-dashboard .ua-real-card small {
+    color: #7b8797;
+    font-size: 12px;
+}
+
+body.ua-dashboard .ua-real-table {
+    padding: 22px;
+    border: 1px solid #e3e6ea;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+body.ua-dashboard .ua-real-table h3 {
+    margin-bottom: 18px;
+    color: #24344d;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+body.ua-dashboard .ua-real-table-scroll {
+    overflow-x: auto;
+}
+
+@media (max-width: 950px) {
+    body.ua-dashboard .ua-real-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* UA DASHBOARD V3 VISUAL CORRECTIONS */
+
+/* Layout */
+body.ua-dashboard {
+    --ua-bg: #f3f4f5;
+    --ua-border: #e4e6e9;
+    --ua-sidebar: #14233f;
+    --ua-accent: #b88938;
+    --ua-text: #28313e;
+    background: var(--ua-bg);
+}
+
+@media screen and (min-width: 64em) {
+    body.ua-dashboard .ua-admin-sidebar.off-canvas {
+        width: 220px;
+    }
+
+    body.ua-dashboard .off-canvas-content {
+        margin-left: 220px;
+    }
+}
+
+body.ua-dashboard .content.large-12.columns {
+    background: transparent;
+    padding: 18px 24px 36px;
+}
+
+body.ua-dashboard .ua-admin-sidebar {
+    background: #14233f;
+}
+
+body.ua-dashboard .ua-admin-sidebar
+.vertical.menu > li:not(.title):not(.subtitle) > a {
+    font-size: 13px;
+    padding: 11px 12px;
+    border-radius: 8px;
+}
+
+body.ua-dashboard .ua-admin-sidebar
+.vertical.menu > li.subtitle {
+    border-top: 1px solid rgba(255,255,255,.10);
+    padding-top: 12px;
+    margin-top: 14px;
+}
+
+body.ua-dashboard .ua-admin-topbar {
+    min-height: 56px;
+    background: white;
+    border-bottom: 1px solid var(--ua-border);
+}
+
+body.ua-dashboard .ua-admin-topbar h1,
+body.ua-dashboard .ua-admin-topbar h1 a {
+    font-size: 15px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+/* Actual Django overview — restore proper three-card grid */
+body.ua-dashboard section.ua-real-overview {
+    display: block;
+    padding: 4px 0 24px;
+    margin: 0;
+    background: transparent;
+}
+
+body.ua-dashboard section.ua-real-overview .ua-real-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin: 20px 0 24px !important;
+}
+
+body.ua-dashboard section.ua-real-overview .ua-real-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: space-between;
+    min-width: 0;
+    min-height: 135px;
+    padding: 20px !important;
+    background: #ffffff !important;
+    border: 1px solid var(--ua-border) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+body.ua-dashboard .ua-real-card > span {
+    display: block;
+    color: #697386;
+    font-size: 13px;
+}
+
+body.ua-dashboard .ua-real-card > strong {
+    display: block;
+    margin: 8px 0;
+    color: #242e3e;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+body.ua-dashboard .ua-real-card > small {
+    display: block;
+    color: #7d8795;
+    font-size: 12px;
+}
+
+body.ua-dashboard .ua-real-table {
+    display: block;
+    background: white;
+    padding: 20px;
+    border: 1px solid var(--ua-border);
+    border-radius: 10px;
+    margin-bottom: 22px;
+    box-shadow: none;
+}
+
+body.ua-dashboard .ua-real-table h3 {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+body.ua-dashboard .ua-real-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Restore legacy Janeway summary rows
+   instead of turning labels and numbers into buttons */
+body.ua-dashboard .box .content .summary {
+    display: flex !important;
+    position: relative;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+    padding: 13px 2px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e7e9ed !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.ua-dashboard .box .content .summary > span {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.ua-dashboard .box .content .summary > .title {
+    order: 1;
+    flex: 1;
+    color: #364152 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+body.ua-dashboard .box .content .summary > .stat {
+    order: 2;
+    flex: 0 0 auto;
+    color: #667085 !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+}
+
+body.ua-dashboard .box .content .summary > .box-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+/* White cards */
+body.ua-dashboard .box {
+    background: #fff;
+    border: 1px solid var(--ua-border);
+    border-radius: 10px;
+    box-shadow: none;
+    margin-bottom: 20px;
+}
+
+body.ua-dashboard .box .title-area {
+    background: white;
+    border-bottom: 1px solid var(--ua-border);
+    padding: 15px 17px;
+}
+
+body.ua-dashboard .box .content {
+    background: white;
+    padding: 16px;
+}
+
+body.ua-dashboard .box .title-area h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+/* Buttons — do not style unrelated controls */
+body.ua-dashboard .button,
+body.ua-dashboard button.button,
+body.ua-dashboard input[type="submit"] {
+    background: #b88938;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+body.ua-dashboard .ua-admin-sidebar .close-button,
+body.ua-dashboard #profile-dropdown button,
+body.ua-dashboard .pagination button {
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+    border: 0;
+}
+
+body.ua-dashboard .ua-admin-sidebar .close-button {
+    color: white;
+}
+
+/* Status labels must retain readable contrast */
+body.ua-dashboard .label.success {
+    background: #e4f3e9;
+    color: #216c46 !important;
+}
+
+body.ua-dashboard .label.warning {
+    background: #fcf1d9;
+    color: #865d16 !important;
+}
+
+body.ua-dashboard .label.alert {
+    background: #fbe8e7;
+    color: #a83530 !important;
+}
+
+/* Tables */
+body.ua-dashboard table {
+    background: white;
+    border-collapse: collapse;
+}
+
+body.ua-dashboard table thead,
+body.ua-dashboard table thead tr {
+    background: #f8f9fa;
+}
+
+body.ua-dashboard table th {
+    font-size: 12px;
+    color: #596273;
+    letter-spacing: .04em;
+}
+
+body.ua-dashboard table td {
+    font-size: 13px;
+    color: #303b4d;
+}
+
+/* Responsive */
+@media screen and (max-width: 950px) {
+    body.ua-dashboard section.ua-real-overview .ua-real-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    body.ua-dashboard .content.large-12.columns {
+        padding: 12px;
+    }
+
+    body.ua-dashboard section.ua-real-overview .ua-real-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
