@@ -303,3 +303,7 @@ class BrokenDOI(models.Model):
 @receiver(post_save, sender=Identifier)
 def reset_article_url_cache(sender, instance, created, **kwargs):
     shared.clear_cache()
+
+
+# Zenodo integration model
+from identifiers.zenodo_models import ZenodoDeposit
