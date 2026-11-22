@@ -15,13 +15,14 @@ class ZenodoPreflightTests(SimpleTestCase):
             pk=40,
             journal_id=1,
             date_published="2026-11-22",
+            is_published=True,
             license_id=1,
             frozenauthor_set=MagicMock(),
             pdfs=MagicMock(),
         )
 
         self.article.frozenauthor_set.exists.return_value = True
-        self.article.pdfs.exists.return_value = True
+        self.article.pdfs.filter.return_value.exists.return_value = True
 
         self.doi_patcher = patch(
             "identifiers.zenodo_service.Identifier.objects"
@@ -103,6 +104,23 @@ class ZenodoPreflightTests(SimpleTestCase):
         self.assertFalse(result.eligible)
         self.assertIn("publication date", result.reason)
 
+    def test_unpublished_article_is_blocked(self):
+        self.article.is_published = False
+
+        result = check_zenodo_eligibility(self.article)
+
+        self.assertFalse(result.eligible)
+        self.assertIn("not published", result.reason)
+
+    def test_pdf_query_requires_public_local_galley(self):
+        result = check_zenodo_eligibility(self.article)
+
+        self.assertTrue(result.eligible)
+        self.article.pdfs.filter.assert_called_once_with(
+            public=True,
+            is_remote=False,
+        )
+
     def test_missing_license_is_blocked(self):
         self.article.license_id = None
 
@@ -120,7 +138,7 @@ class ZenodoPreflightTests(SimpleTestCase):
         self.assertIn("authors", result.reason)
 
     def test_missing_pdf_is_blocked(self):
-        self.article.pdfs.exists.return_value = False
+        self.article.pdfs.filter.return_value.exists.return_value = False
 
         result = check_zenodo_eligibility(self.article)
 

@@ -68,6 +68,14 @@ def check_zenodo_eligibility(article, *, is_sandbox=True):
             existing.deposition_id,
         )
 
+    if not article.is_published:
+        return ZenodoPreflightResult(
+            False,
+            "Article is not published",
+            article.pk,
+            (),
+        )
+
     if article.date_published is None:
         return ZenodoPreflightResult(
             False,
@@ -92,7 +100,10 @@ def check_zenodo_eligibility(article, *, is_sandbox=True):
             (),
         )
 
-    if not article.pdfs.exists():
+    if not article.pdfs.filter(
+        public=True,
+        is_remote=False,
+    ).exists():
         return ZenodoPreflightResult(
             False,
             "Article has no PDF galley",
