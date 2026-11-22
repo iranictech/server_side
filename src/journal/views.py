@@ -2244,6 +2244,10 @@ def sitemap(request, issue_id=None):
 
 @decorators.frontend_enabled
 def search(request):
+    # GOLD_SEARCH_UA_V1: scoped search upgrade; other journals unchanged.
+    if getattr(request, "journal", None) and request.journal.code == "ua":
+        from journal.gold_search import gold_search
+        return gold_search(request)
     if settings.ENABLE_FULL_TEXT_SEARCH:
         return full_text_search(request)
     else:

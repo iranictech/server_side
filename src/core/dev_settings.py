@@ -3,7 +3,7 @@
 import os
 
 DEBUG = True
-SECRET_KEY = "uxprsdhk^gzd-r=_287byolxn)$k6tsd8_cepl^s^tms2w1qrv"
+SECRET_KEY = os.environ["JANEWAY_SECRET_KEY"]
 
 # This is the default redirect if no other sites are found.
 DEFAULT_HOST = "https://www.example.org"

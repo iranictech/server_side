@@ -1,6 +1,7 @@
-__copyright__ = "Copyright 2017 Birkbeck, University of London"
-__author__ = "Martin Paul Eve & Andy Byers"
-__license__ = "AGPL v3"
-__maintainer__ = "Birkbeck Centre for Technology and Publishing"
+"""Optional Gold Journal Finder; existing Search Bar routes remain unchanged."""
+from django.urls import path
+from .gold_finder import find_journal_fit
 
-urlpatterns = []
+urlpatterns = [
+    path("gold-finder/", find_journal_fit, name="gold_journal_finder"),
+]

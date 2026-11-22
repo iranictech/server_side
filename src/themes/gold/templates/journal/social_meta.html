@@ -1,0 +1,26 @@
+{% load journal_social %}
+{% if request.journal %}
+{% with social_title=request.journal.name social_description=journal_settings.general.journal_description|default:request.journal.description|striptags|truncatechars:220 social_url=request.build_absolute_uri %}
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ social_title }}">
+<meta property="og:title" content="{{ social_title }}">
+<meta property="og:description" content="{{ social_description }}">
+<meta property="og:url" content="{{ social_url }}">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ social_title }}">
+<meta name="twitter:description" content="{{ social_description }}">
+
+{% with social_image=request.journal.default_cover_image|journal_social_url:request %}
+{% if social_image %}
+<meta property="og:image" content="{{ social_image }}">
+<meta property="og:image:secure_url" content="{{ social_image }}">
+<meta property="og:image:alt" content="{{ social_title }} cover">
+<meta name="twitter:image" content="{{ social_image }}">
+<meta name="twitter:image:alt" content="{{ social_title }} cover">
+{% endif %}
+{% endwith %}
+
+{% endwith %}
+{% endif %}

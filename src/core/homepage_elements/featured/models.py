@@ -19,6 +19,12 @@ class FeaturedArticle(models.Model):
         on_delete=models.SET_NULL,
     )
 
+    editor_note = models.TextField(
+        blank=True,
+        default="",
+        help_text="Editor's note for this featured article.",
+    )
+
     class Meta:
         ordering = ("sequence", "added")
 

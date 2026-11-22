@@ -1,0 +1,22 @@
+[Unit]
+Description=Janeway Google Scholar Citation Synchronization
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+
+EnvironmentFile=/etc/janeway-scholar.env
+
+ExecStart=/usr/bin/bash /opt/janeway-scholar/run_sync.sh --collect --apply --max-articles 5
+
+TimeoutStartSec=360
+Nice=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal

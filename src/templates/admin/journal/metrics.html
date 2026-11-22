@@ -1,0 +1,76 @@
+{% extends "admin/core/base.html" %}
+{% block title %}Journal Metrics{% endblock %}
+{% block title-section %}Journal Settings{% endblock %}
+{% block title-sub %}Metrics — {{ request.journal.name }}{% endblock %}
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  <li><a href="{% url 'core_manager_index' %}">Manager</a></li>
+  <li><a href="{% url 'core_edit_settings_group' 'journal' %}">Journal Settings</a></li>
+  <li>Metrics</li>
+{% endblock %}
+
+{% block body %}
+{% include "admin/core/manager/settings/journal_tabs.html" with active_tab='metrics' %}
+<div class="row expanded">
+  <div class="large-7 columns">
+    <div class="box">
+      <div class="title-area"><h2>Measured statistics — past 365 days</h2></div>
+      <div class="content">
+        {% if metrics and metrics.calculated_at %}
+          <p>Calculated: {{ metrics.calculated_at|date:"Y-m-d H:i" }} (server timezone)</p>
+          <table class="stack">
+            <tbody>
+              <tr><th>Submitted manuscripts</th><td>{{ metrics.submitted_count }}</td></tr>
+              <tr><th>Accepted decisions</th><td>{{ metrics.accepted_count }}</td></tr>
+              <tr><th>Rejected decisions</th><td>{{ metrics.rejected_count }}</td></tr>
+              <tr><th>Published articles</th><td>{{ metrics.published_count }}</td></tr>
+              <tr><th>Published regular issues</th><td>{{ metrics.published_issues_count }}</td></tr>
+              <tr><th>Completed reviewer reports</th><td>{{ metrics.completed_reviews_count }}</td></tr>
+              <tr><th>Acceptance rate</th><td>
+                {% if metrics.acceptance_rate is not None %}{{ metrics.acceptance_rate }}% (automatic)
+                {% elif metrics.manual_acceptance_rate is not None %}{{ metrics.manual_acceptance_rate }}% (manual fallback)
+                {% else %}Insufficient data{% endif %}
+              </td></tr>
+              <tr><th>Actual review duration (mean)</th><td>
+                {% if metrics.average_review_days is not None %}{{ metrics.average_review_days }} days (automatic)
+                {% elif metrics.manual_review_days is not None %}{{ metrics.manual_review_days }} days (manual fallback)
+                {% else %}Insufficient data{% endif %}
+              </td></tr>
+              <tr><th>Editorial review target</th><td>{{ metrics.review_target_days|default_if_none:"Not specified" }}{% if metrics.review_target_days %} days{% endif %}</td></tr>
+            </tbody>
+          </table>
+        {% else %}
+          <p>No automatic statistics have been calculated yet. Use Refresh Metrics below.</p>
+        {% endif %}
+        <p><small>Review duration measures days from a reviewer's acceptance of an invitation to completion of their report. It is not submission-to-first-decision time. Acceptance rate is based on decisions recorded in the last 365 days.</small></p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="refresh">
+          <button type="submit" class="button secondary">Refresh Metrics</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="large-5 columns">
+    <div class="box">
+      <div class="title-area"><h2>Editorial policies and manual fallback</h2></div>
+      <div class="content">
+        <p>These policy values are independent from measured performance. A manual fallback appears only when automatic values are unavailable.</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save">
+          {{ form.non_field_errors }}
+          {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+            {% if field.help_text %}<p><small>{{ field.help_text }}</small></p>{% endif %}
+          {% endfor %}
+          <button type="submit" class="button">Save Policies</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

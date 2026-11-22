@@ -1,0 +1,77 @@
+{% extends "core/base.html" %}
+{% load gold_home_data %}
+{% load i18n %}
+
+{% block title %}{{ request.journal.name }}{% endblock title %}
+{% block body %}
+<div class="gold-homepage">
+  {% include "journal/homepage_elements/hero.html" %}
+
+  {% for element in homepage_elements %}
+    {% if element.template_path == "core/homepage_elements/search_bar.html" %}
+      <section class="gold-homepage-element homepage-element-wrapper gold-journal-finder-wrapper homepage-element-{{ element.name|slugify }}">
+        {% include element.template_path %}
+      </section>
+    {% endif %}
+  {% endfor %}
+
+
+
+  <div class="gold-homepage-elements" id="gold-home-elements">
+    {% for element in homepage_elements %}
+      {% if element.template_path == "journal/homepage_elements/popular.html" %}
+        <section class="gold-homepage-element homepage-element-wrapper homepage-element-{{ element.name|slugify }}">
+          {% gold_element_context request.journal element.name as gold_element_data %}
+          {% with indexings=gold_element_data.indexings popular_articles=gold_element_data.popular_articles featured_articles=gold_element_data.featured_articles popular_fallback_latest=gold_element_data.popular_fallback_latest %}
+            {% include element.template_path %}
+          {% endwith %}
+        </section>
+      {% endif %}
+    {% endfor %}
+
+    {% for element in homepage_elements %}
+      {% if element.template_path == "journal/homepage_elements/indexing.html" %}
+        <section class="gold-homepage-element homepage-element-wrapper homepage-element-{{ element.name|slugify }} gold-indexed-in-wrapper">
+          {% gold_element_context request.journal element.name as gold_element_data %}
+          {% with indexings=gold_element_data.indexings popular_articles=gold_element_data.popular_articles featured_articles=gold_element_data.featured_articles popular_fallback_latest=gold_element_data.popular_fallback_latest %}
+            {% include element.template_path %}
+          {% endwith %}
+        </section>
+      {% endif %}
+    {% endfor %}
+
+    {% for element in homepage_elements %}
+      {% if element.template_path == "journal/homepage_elements/issue_block.html" %}
+        <section class="gold-homepage-element homepage-element-wrapper homepage-element-{{ element.name|slugify }}">
+          {% gold_element_context request.journal element.name as gold_element_data %}
+          {% with indexings=gold_element_data.indexings popular_articles=gold_element_data.popular_articles featured_articles=gold_element_data.featured_articles popular_fallback_latest=gold_element_data.popular_fallback_latest %}
+            {% include element.template_path %}
+          {% endwith %}
+        </section>
+      {% endif %}
+    {% endfor %}
+
+    {% for element in homepage_elements %}
+      {% if element.template_path == "journal/homepage_elements/featured.html" %}
+        <section class="gold-homepage-element homepage-element-wrapper homepage-element-{{ element.name|slugify }}">
+          {% gold_element_context request.journal element.name as gold_element_data %}
+          {% with indexings=gold_element_data.indexings popular_articles=gold_element_data.popular_articles featured_articles=gold_element_data.featured_articles popular_fallback_latest=gold_element_data.popular_fallback_latest %}
+            {% include element.template_path %}
+          {% endwith %}
+        </section>
+      {% endif %}
+    {% endfor %}
+
+    {% for element in homepage_elements %}
+      {% if element.template_path != "core/homepage_elements/search_bar.html" and element.template_path != "journal/homepage_elements/popular.html" and element.template_path != "journal/homepage_elements/indexing.html" and element.template_path != "journal/homepage_elements/issue_block.html" and element.template_path != "journal/homepage_elements/featured.html" %}
+        <section class="gold-homepage-element homepage-element-wrapper homepage-element-{{ element.name|slugify }}">
+          {% gold_element_context request.journal element.name as gold_element_data %}
+          {% with indexings=gold_element_data.indexings popular_articles=gold_element_data.popular_articles featured_articles=gold_element_data.featured_articles popular_fallback_latest=gold_element_data.popular_fallback_latest %}
+            {% include element.template_path %}
+          {% endwith %}
+        </section>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock body %}

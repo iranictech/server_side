@@ -7,7 +7,7 @@
 {% is_senior_editor as senior_editor %}
 {% is_any_editor as any_editor %}
 
-<div class="off-canvas position-left reveal-for-large" id="offCanvas" data-off-canvas>
+<div class="off-canvas position-left reveal-for-large ua-admin-sidebar" id="offCanvas" data-off-canvas>
     <button class="close-button" aria-label="Close menu" type="button" data-close>
         <span aria-hidden="true">&times;</span>
     </button>
@@ -43,7 +43,7 @@
         {% endif %}
         <li class="subtitle"><a href="#">Dashboards</a></li>
         <li>
-            <a href="{% url 'core_dashboard' %}">
+            <a href="{% url 'core_dashboard' %}"{% if request.journal.code == "ua" and request.resolver_match.url_name == "core_dashboard" %} aria-current="page"{% endif %}>
                 <i class="fa fa-tachometer">&nbsp;</i> Main
             </a>
         </li>
@@ -149,7 +149,7 @@
 
 <div class="off-canvas-content" data-off-canvas-content>
 
-    <header class="main-header" role="banner">
+    <header class="main-header ua-admin-topbar" role="banner">
         <div class="row expanded">
             <div class="small-3 columns hide-for-large">
                 <button type="button" class="button hide-for-large" data-toggle="offCanvas"><img

@@ -38,7 +38,7 @@ sys.path.append(os.path.join(BASE_DIR, "plugins"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # You should change this key before you go live!
-SECRET_KEY = "uxprsdhk^gzd-r=_287byolxn)$k6tsd8_cepl^s^tms2w1qrv"
+SECRET_KEY = os.environ["JANEWAY_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -719,3 +719,7 @@ ROR_RECORDS_FILE = "https://zenodo.org/api/communities/ror-data/records?sort=new
 # 'Server has gone away' errors on large dumps. Operators on a MySQL server
 # with a smaller max_allowed_packet may need to lower this value in their local settings.
 ROR_BULK_BATCH_SIZE = 1000
+
+# Gold journal custom CSRF error presentation.
+# CSRF verification remains enabled.
+CSRF_FAILURE_VIEW = "core.gold_csrf.csrf_failure"

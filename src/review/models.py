@@ -839,3 +839,48 @@ class DecisionDraft(models.Model):
 
     def __str__(self):
         return "{0}: {1}".format(self.article.title, self.decision)
+
+
+class ReviewerCOIAssessment(models.Model):
+    """Append-only editor decisions; no implicit reviewer authorization.
+
+    Each action creates a new row. Later policy checks may use the most
+    recent decision, but these records never send reviewer invitations.
+    """
+
+    STATUS_CLEARED = "cleared"
+    STATUS_CONFLICT = "conflict"
+    STATUS_UNCERTAIN = "uncertain"
+    STATUS_CHOICES = (
+        (STATUS_CLEARED, "No apparent conflict after editorial review"),
+        (STATUS_CONFLICT, "Conflict identified"),
+        (STATUS_UNCERTAIN, "Further review required"),
+    )
+
+    article = models.ForeignKey(
+        "submission.Article",
+        on_delete=models.CASCADE,
+        related_name="reviewer_coi_assessments",
+    )
+    reviewer = models.ForeignKey(
+        "core.Account",
+        on_delete=models.CASCADE,
+        related_name="reviewer_coi_assessments",
+    )
+    assessed_by = models.ForeignKey(
+        "core.Account",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="coi_assessments_recorded",
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES)
+    rationale = models.TextField()
+    recorded_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    class Meta:
+        ordering = ("-recorded_at", "-pk")
+
+    def __str__(self):
+        return "COI assessment for article {} reviewer {}".format(
+            self.article_id, self.reviewer_id
+        )

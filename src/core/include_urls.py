@@ -19,6 +19,7 @@ from press import views as press_views
 from cms import views as cms_views
 from submission import views as submission_views
 from journal import views as journal_views
+from journal import metrics_views
 from repository import views as repository_views
 from utils.logger import get_logger
 
@@ -139,6 +140,7 @@ urlpatterns = [
         name="kanban_delete_note",
     ),
     # Manager URLS
+    re_path(r"^manager/metrics/$", metrics_views.journal_metrics_manager, name="journal_metrics_manager"),
     re_path(r"^manager/$", core_views.manager_index, name="core_manager_index"),
     # Settings Management
     re_path(

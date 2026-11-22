@@ -31,6 +31,18 @@
                                     {{ fa.article.safe_title }}<br/>
                                     Added on {{ fa.added }} by {{ fa.added_by.full_name }}<br/>
                                 </small>
+                                {% if can_edit_editor_note %}
+                                <div>
+                                    <label for="editor-note-{{ fa.pk }}">Editor's Note</label>
+                                    <textarea id="editor-note-{{ fa.pk }}"
+                                              name="editor_note_{{ fa.pk }}"
+                                              rows="4" maxlength="5000">{{ fa.editor_note }}</textarea>
+                                    <button type="submit" name="save_note"
+                                            value="{{ fa.pk }}" class="tiny button">Save Note</button>
+                                </div>
+                                {% elif fa.editor_note %}
+                                <p><strong>Editor's Note:</strong> {{ fa.editor_note|truncatewords:30 }}</p>
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>
@@ -38,6 +50,12 @@
 
                 <div class="large-6 columns">
                     <h4>Add New Featured Article</h4>
+                    {% if can_edit_editor_note %}
+                    <label for="new-editor-note">Editor's Note (optional)</label>
+                    <textarea id="new-editor-note" name="new_editor_note" rows="3"
+                              maxlength="5000"
+                              placeholder="Note for the article selected below"></textarea>
+                    {% endif %}
                     <table id="featured" class="small">
                         <thead>
                         <tr>

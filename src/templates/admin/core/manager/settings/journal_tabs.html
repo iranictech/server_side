@@ -1,0 +1,86 @@
+{# Journal Settings hierarchy: two top-level sections, with page-level subtabs. #}
+{# Every existing URL and permission check remains unchanged. #}
+{% if request.journal %}
+<style>
+  .jm-settings-nav {
+    margin: 0 0 1.25rem;
+    border: 1px solid #d9e1ec;
+    border-radius: 4px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .jm-settings-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.5rem;
+    padding: 0 0.9rem;
+    border-bottom: 1px solid #d9e1ec;
+  }
+  .jm-settings-tabs a {
+    display: inline-block;
+    padding: 0.85rem 0.35rem 0.75rem;
+    color: #314b70;
+    text-decoration: none;
+    font-size: 0.94rem;
+    font-weight: 650;
+    border-bottom: 3px solid transparent;
+  }
+  .jm-settings-tabs a:hover, .jm-settings-tabs a:focus {
+    color: #203e6d;
+    background: #f5f8fc;
+  }
+  .jm-settings-tabs a.is-active {
+    color: #183b72;
+    border-bottom-color: #d75a35;
+  }
+  .jm-settings-subtabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.7rem;
+    padding: 0.65rem 0.9rem;
+    background: #f9fbfe;
+  }
+  .jm-settings-subtabs a {
+    display: inline-block;
+    padding: 0.4rem 0.7rem;
+    color: #425a7a;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.87rem;
+  }
+  .jm-settings-subtabs a:hover, .jm-settings-subtabs a:focus {
+    background: #eef3fa;
+    color: #183b72;
+  }
+  .jm-settings-subtabs a[aria-current="page"] {
+    color: #183b72;
+    background: #eaf0fa;
+    border-color: #cbd8ec;
+    font-weight: 650;
+  }
+</style>
+<div class="row expanded">
+  <div class="large-12 columns">
+    <div class="jm-settings-nav">
+      <nav class="jm-settings-tabs" aria-label="Journal settings categories">
+        <a href="{% url 'core_edit_settings_group' 'journal' %}" class="{% if active_tab == 'journal' or active_tab == 'metrics' %}is-active{% endif %}">General</a>
+        <a href="{% url 'core_edit_settings_group' 'styling' %}" class="{% if active_tab == 'styling' or active_tab == 'home' or active_tab == 'footer' or active_tab == 'images' %}is-active{% endif %}">Styling</a>
+      </nav>
+      {% if active_tab == 'journal' or active_tab == 'metrics' %}
+        <nav class="jm-settings-subtabs" aria-label="General settings pages">
+          <a href="{% url 'core_edit_settings_group' 'journal' %}"{% if active_tab == 'journal' %} aria-current="page"{% endif %}>Journal Details</a>
+          <a href="{% url 'journal_metrics_manager' %}"{% if active_tab == 'metrics' %} aria-current="page"{% endif %}>Metrics</a>
+        </nav>
+      {% elif active_tab == 'styling' or active_tab == 'home' or active_tab == 'footer' or active_tab == 'images' %}
+        <nav class="jm-settings-subtabs" aria-label="Styling settings pages">
+          <a href="{% url 'core_edit_settings_group' 'styling' %}"{% if active_tab == 'styling' %} aria-current="page"{% endif %}>Appearance</a>
+          <a href="{% url 'home_settings_index' %}"{% if active_tab == 'home' %} aria-current="page"{% endif %}>Home Page</a>
+          <a href="{% url 'journal_footer_settings' %}"{% if active_tab == 'footer' %} aria-current="page"{% endif %}>Footer</a>
+          <a href="{% url 'core_edit_settings_group' 'images' %}"{% if active_tab == 'images' %} aria-current="page"{% endif %}>Images</a>
+        </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}

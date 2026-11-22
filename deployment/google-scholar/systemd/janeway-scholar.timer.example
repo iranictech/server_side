@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Janeway Google Scholar Synchronization
+
+[Timer]
+OnCalendar=Sun *-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=15min
+Unit=janeway-scholar.service
+
+[Install]
+WantedBy=timers.target

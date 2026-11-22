@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block body %}
+    {% include "admin/core/manager/settings/journal_tabs.html" with active_tab='home' %}
     <div class="row expanded" data-equalizer>
     <form method="POST">
         {% csrf_token %}

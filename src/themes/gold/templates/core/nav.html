@@ -1,0 +1,181 @@
+{% load i18n roles static %}
+<header class="header_journal_container">
+            <div class="head_sec1">
+                <div class="contain_logo">
+                    <a href="{% url 'website_index' %}" class="logo">
+                        {% if request.journal.header_image %}
+                        <img src="{{ request.journal.header_image.url }}" alt="{{ request.journal.name }}">
+                        {% else %}
+                        <img src="{% static 'gold/img/logo.png' %}" alt="{{ request.journal.name }}">
+                        {% endif %}
+                    </a>
+                </div>
+                <nav class="contain_nav">
+                    {% include 'core/gold_navigation_items.html' %}
+                </nav>
+            </div>
+
+            <div class="head_sec2">
+                <div class="head_search_icon">
+                    <a href="{% url 'search' %}" class="icon_btn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M19 19L13 13M1 8C1 8.91925 1.18106 9.82951 1.53284 10.6788C1.88463 11.5281 2.40024 12.2997 3.05025 12.9497C3.70026 13.5998 4.47194 14.1154 5.32122 14.4672C6.1705 14.8189 7.08075 15 8 15C8.91925 15 9.82951 14.8189 10.6788 14.4672C11.5281 14.1154 12.2997 13.5998 12.9497 12.9497C13.5998 12.2997 14.1154 11.5281 14.4672 10.6788C14.8189 9.82951 15 8.91925 15 8C15 7.08075 14.8189 6.1705 14.4672 5.32122C14.1154 4.47194 13.5998 3.70026 12.9497 3.05025C12.2997 2.40024 11.5281 1.88463 10.6788 1.53284C9.82951 1.18106 8.91925 1 8 1C7.08075 1 6.1705 1.18106 5.32122 1.53284C4.47194 1.88463 3.70026 2.40024 3.05025 3.05025C2.40024 3.70026 1.88463 4.47194 1.53284 5.32122C1.18106 6.1705 1 7.08075 1 8Z"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#434342" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="primary_button">
+                    {% if request.journal.nav_start and not journal_settings.general.disable_journal_submission %}
+                    <button type="button" onclick="window.location.href='{% url 'submission_start' %}'">{% trans 'Submit Manuscript' %}</button>
+                    {% endif %}
+                </div>
+                <div class="second_button_header">
+                    {% if request.user.is_authenticated %}
+                    <button type="button" aria-expanded="false"
+                        aria-controls="goldAccountLinks"
+                        data-gold-account-toggle>
+                        {% trans 'Account' %}
+                    </button>
+                    <div id="goldAccountLinks"
+                         class="gold-user-menu-content"
+                         hidden>
+                        <a href="{% url 'core_dashboard' %}">{% trans 'Dashboard' %}</a>
+                        {% user_has_role request 'editor' as user_is_editor %}
+                        {% if user_is_editor or request.user.is_staff %}
+                            <a href="{% url 'kanban' %}">{% trans 'Kanban' %}</a>
+                            <a href="{% url 'core_manager_index' %}">{% trans 'Manager' %}</a>
+                            {% if request.resolver_match.url_name == 'article_view' and article %}
+                                <a href="{% url 'manage_archive_article' article.pk %}">{% trans 'Edit Article' %}</a>
+                            {% endif %}
+                        {% endif %}
+                        {% if request.user.is_staff %}
+                            <a href="/admin/">{% trans 'Admin' %}</a>
+                        {% endif %}
+                        <a href="{% url 'core_edit_profile' %}">{% trans 'Profile' %}</a>
+                        <a href="{% url 'core_logout' %}">{% trans 'Logout' %}</a>
+                    </div>
+                    {% else %}
+                    <button type="button" onclick="window.location.href='{% url 'core_login' %}'">{% trans 'Login / Register' %}</button>
+                    {% endif %}
+                </div>
+
+
+                <button class="menu_toggle" type="button" aria-label="Open menu" aria-expanded="false"
+                    aria-controls="mobileDrawer" id="menuToggle">
+                    <span class="menu_toggle__bars" aria-hidden="true">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6H20M4 12H20M4 18H20" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" stroke="#354052" />
+                        </svg>
+                    </span>
+
+                </button>
+
+
+
+
+
+            </div>
+
+
+        </header>
+
+<div class="drawer_overlay" id="drawerOverlay" aria-hidden="true"></div>
+
+<aside class="mobile_drawer" id="mobileDrawer" aria-label="Mobile navigation">
+            <header class="mobile_drawer__header">
+                <div class="mobile_drawer_log_search">
+                    <a href="{% url 'search' %}" class="mobile_drawer__title icon_btn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M19 19L13 13M1 8C1 8.91925 1.18106 9.82951 1.53284 10.6788C1.88463 11.5281 2.40024 12.2997 3.05025 12.9497C3.70026 13.5998 4.47194 14.1154 5.32122 14.4672C6.1705 14.8189 7.08075 15 8 15C8.91925 15 9.82951 14.8189 10.6788 14.4672C11.5281 14.1154 12.2997 13.5998 12.9497 12.9497C13.5998 12.2997 14.1154 11.5281 14.4672 10.6788C14.8189 9.82951 15 8.91925 15 8C15 7.08075 14.8189 6.1705 14.4672 5.32122C14.1154 4.47194 13.5998 3.70026 12.9497 3.05025C12.2997 2.40024 11.5281 1.88463 10.6788 1.53284C9.82951 1.18106 8.91925 1 8 1C7.08075 1 6.1705 1.18106 5.32122 1.53284C4.47194 1.88463 3.70026 2.40024 3.05025 3.05025C2.40024 3.70026 1.88463 4.47194 1.53284 5.32122C1.18106 6.1705 1 7.08075 1 8Z"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#434342" />
+                        </svg>
+                        Search
+                    </a>
+                </div>
+                <button class="mobile_drawer__close" type="button" aria-label="Close menu" id="drawerClose">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                        stroke-linecap="round">
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                    </svg>
+                </button>
+            </header>
+
+            <nav class="mobile_drawer__nav" aria-label="Mobile primary navigation">
+                {% include 'core/gold_navigation_items.html' %}
+            </nav>
+
+            <footer class="mobile_drawer__footer">
+                {% if request.user.is_authenticated %}
+                <details class="gold-mobile-account" open>
+                    <summary class="gold-mobile-account__header">
+                        <span class="gold-mobile-account__avatar"
+                              aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+                            </svg>
+                        </span>
+
+                        <span class="gold-mobile-account__identity">
+                            <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                            <small>Signed in</small>
+                        </span>
+
+                        <span class="gold-mobile-account__chevron"
+                              aria-hidden="true"></span>
+                    </summary>
+
+                    <div class="gold-mobile-account__links">
+                        <a href="{% url 'core_edit_profile' %}">
+                            <span aria-hidden="true">♙</span>
+                            {% trans 'Profile' %}
+                        </a>
+
+                        <a href="{% url 'core_dashboard' %}">
+                            <span aria-hidden="true">▦</span>
+                            {% trans 'Dashboard' %}
+                        </a>
+
+                        <a href="{% url 'core_logout' %}">
+                            <span aria-hidden="true">⇥</span>
+                            {% trans 'Logout' %}
+                        </a>
+                    </div>
+                </details>
+                {% else %}
+                <button class="btn_drawer_ghost" type="button"
+                    onclick="window.location.href='{% url 'core_login' %}'">
+                    {% trans 'Login / Register' %}
+                </button>
+                {% endif %}
+                {% if request.journal.nav_start and not journal_settings.general.disable_journal_submission %}
+                <button class="btn_drawer_primary" type="button"
+                    onclick="window.location.href='{% url 'submission_start' %}'">{% trans 'Submit Manuscript' %}</button>
+                {% endif %}
+            </footer>
+        </aside>
+
+<div id="searchPopup" class="search_popup">
+            <div class="search_popup__content">
+                <button id="searchPopupClose" class="search_popup__close" type="button">×</button>
+                <div class="search_popup__container">
+                    <div class="search_popup__title">
+                        <span>Search</span>
+                        <h2>Find Articles</h2>
+                    </div>
+                    <p class="search_popup__description">Search articles by title, keywords, or abstract to discover relevant research published in this journal.</p>
+                    <form id="searchForm" class="search_form" method="GET" action="{% url 'search' %}">
+                        <div class="search_field search_field--input">
+                            <label>search</label>
+                            <input id="searchInput" name="article_search" type="text" placeholder="Paste title / abstract / keywords…">
+                        </div>
+                        <input type="hidden" name="sort" value="title">
+                        <button class="search_submit" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>

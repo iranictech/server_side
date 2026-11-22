@@ -25,12 +25,17 @@
     } catch (e) {
     }</script>
     {% block css %}{% endblock %}
+{% if request.journal and request.journal.code == "ua" %}
+<link rel="stylesheet"
+      href="{% static 'admin/css/ua-dashboard.css' %}">
+{% endif %}
+
     {% include "common/elements/favicons.html" %}
     {% if settings.HIJACK_USERS_ENABLED %}
       <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}" />
     {% endif %}
 </head>
-<body>
+<body{% if request.journal and request.journal.code == "ua" %} class="ua-dashboard"{% endif %}>
 
 {% block nav %}
     {% if request.journal %}

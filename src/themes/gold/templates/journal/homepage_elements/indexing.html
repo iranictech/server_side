@@ -1,0 +1,46 @@
+{# Gold-only Indexed In; content remains controlled by Abstract Indexing records. #}
+{% if indexings %}
+<section class="indexIn_indexed_section" data-gold-home-element="indexing" aria-labelledby="gold-indexed-title">
+    <div class="indexIn_container">
+        <div class="indexIn_section_header">
+            <h2 id="gold-indexed-title">Indexed In</h2>
+            <p>Discover This journal across leading academic indexing and abstracting databases.</p>
+        </div>
+        <div class="indexIn_marquee_container">
+            <div class="indexIn_marquee_track{% if indexings|length >= 3 %} indexIn_animated{% else %} indexIn_static{% endif %}">
+                <div class="indexIn_logo_group">
+                    {% for indexing in indexings %}
+                    <div class="indexIn_logo_item">
+                        {% if indexing.url %}<a class="indexIn_logo_link" href="{{ indexing.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ indexing.name }}">{% endif %}
+                            <span class="indexIn_logo_text">
+                                {% if indexing.image %}<img src="{{ indexing.image.url }}" alt="{{ indexing.name }}" loading="lazy" decoding="async">{% else %}{{ indexing.name }}{% endif %}
+                            </span>
+                        {% if indexing.url %}</a>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if indexings|length >= 3 %}
+                <div class="indexIn_logo_group" aria-hidden="true">
+                    {% for indexing in indexings %}
+                    <div class="indexIn_logo_item">
+                        {% if indexing.url %}
+                        <a class="indexIn_logo_link"
+                           href="{{ indexing.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           tabindex="-1"
+                           aria-label="{{ indexing.name }}">
+                        {% endif %}
+                            <span class="indexIn_logo_text">
+                                {% if indexing.image %}<img src="{{ indexing.image.url }}" alt="" loading="lazy" decoding="async">{% else %}{{ indexing.name }}{% endif %}
+                            </span>
+                        {% if indexing.url %}</a>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}

@@ -1,0 +1,151 @@
+{% load i18n %}
+<section class="journal-hero" aria-labelledby="gold-home-title">
+                <div class="journal-hero__inner">
+
+                    <div class="journal-hero__card">
+
+<ul class="journal-hero__stats"
+    aria-label="Journal at a glance"
+    data-metrics-source="journal-metrics-v1">
+
+{% with jm=request.journal.metrics_profile %}
+
+  <li class="journal-hero__stat journal-hero__stat--open">
+    {% if jm.open_access_policy == 'open' %}
+      <svg class="journal-hero__icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M5 11m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+                                    <path d="M12 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                    <path d="M8 11v-5a4 4 0 0 1 8 0" />
+                                </svg>
+    {% endif %}
+    <span class="journal-hero__stat-label">
+      {% if jm.open_access_policy == 'open' %}Open access
+      {% elif jm.open_access_policy == 'hybrid' %}Hybrid access
+      {% elif jm.open_access_policy == 'subscription' %}Subscription access
+      {% else %}Access not specified{% endif %}
+    </span>
+  </li>
+
+  <li class="journal-hero__stat">
+    <span class="journal-hero__stat-value">
+      {{ jm.issues_per_year|default:"—" }}
+    </span>
+    <span class="journal-hero__stat-label">Issue Per Year</span>
+  </li>
+
+  <li class="journal-hero__stat">
+    <span class="journal-hero__stat-value">
+      {% if jm.acceptance_rate != None %}
+        {{ jm.acceptance_rate|floatformat:"-2" }}%
+      {% elif jm.manual_acceptance_rate != None %}
+        {{ jm.manual_acceptance_rate|floatformat:"-2" }}%
+      {% else %}—{% endif %}
+    </span>
+    <span class="journal-hero__stat-label">Acceptance Rate</span>
+  </li>
+
+  <li class="journal-hero__stat">
+    <span class="journal-hero__stat-value">
+      {% if jm.average_review_days != None %}
+        {{ jm.average_review_days|floatformat:"-2" }} Days
+      {% elif jm.manual_review_days != None %}
+        {{ jm.manual_review_days|floatformat:"-2" }} Days
+      {% else %}—{% endif %}
+    </span>
+    <span class="journal-hero__stat-label">Review Speed</span>
+  </li>
+
+  <li class="journal-hero__stat">
+    <span class="journal-hero__stat-value">
+      {% if jm.apc_policy == 'free' %}Free
+      {% elif jm.apc_policy == 'paid' %}
+        {% if jm.apc_amount != None and jm.apc_currency %}
+          {{ jm.apc_amount|floatformat:"-2" }} {{ jm.apc_currency }}
+        {% else %}Paid{% endif %}
+      {% else %}Not specified{% endif %}
+    </span>
+    <span class="journal-hero__stat-label">APC</span>
+  </li>
+
+{% endwith %}
+</ul>
+
+                        {% if request.journal.default_cover_image %}
+                        <img src="{{ request.journal.default_cover_image.url }}" alt="{{ request.journal.name }}" class="journal-hero__cover" loading="eager">
+                        {% elif request.journal.thumbnail_image %}
+                        <img src="{% url 'journal_cover_download' %}" alt="{{ request.journal.name }}" class="journal-hero__cover" loading="eager">
+                        {% else %}
+                        <div class="journal-hero__cover journal-hero__cover--placeholder" role="img" aria-label="{{ request.journal.name }}">{{ request.journal.name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="journal-hero__info">
+
+                        <div class="journal-hero__info-head">
+                            <h1 class="journal-hero__info-title" id="gold-home-title">{{ request.journal.name }}</h1>
+
+                        </div>
+
+                        {% if journal_settings.general.journal_description %}
+                        <p class="journal-hero__info-text">{{ journal_settings.general.journal_description|striptags|truncatewords:40 }}</p>
+                        {% elif request.journal.description %}
+                        <p class="journal-hero__info-text">{{ request.journal.description|striptags|truncatewords:40 }}</p>
+                        {% endif %}
+
+                        <div class="journal-hero__info-actions">
+
+                            <div class="journal-hero__info-buttons">
+                                {% if request.journal.nav_start and not journal_settings.general.disable_journal_submission %}
+                                <a class="primary_button_hero journal-hero__button--solid" href="{% url 'submission_start' %}">Submit Manuscript</a>
+                                {% endif %}
+
+                                {% for item in navigation_items %}
+                                    {% if not item.for_footer and item.url %}
+                                        {% if item.link_name|lower == "about" or item.link_name|lower == "about journal" %}
+                                        <a class="primary_button_hero journal-hero__button--outline" href="{{ item.url }}">About journal</a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <div class="journal-hero__share">
+                                <span class="journal-hero__share-label">
+                                    Share Journal:
+                                </span>
+
+                                <a class="journal-hero__share-button" href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Share on X">
+                                    <svg class="journal-hero__share-icon" width="16" height="16" viewBox="0 0 512 512"
+                                        aria-hidden="true">
+                                        <path
+                                            d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
+                                    </svg>
+                                </a>
+
+                                <a class="journal-hero__share-button" href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook">
+                                    <svg class="journal-hero__share-icon" width="10" height="16" viewBox="0 0 320 512"
+                                        aria-hidden="true">
+                                        <path
+                                            d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z" />
+                                    </svg>
+                                </a>
+
+                                <a class="journal-hero__share-button"
+                                    href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Share on LinkedIn">
+                                    <svg class="journal-hero__share-icon" width="14" height="16" viewBox="0 0 448 512"
+                                        aria-hidden="true">
+                                        <path
+                                            d="M100.3 448H7.4V148.9h92.9zM53.8 108.1C24.1 108.1 0 83.5 0 53.8a53.8 53.8 0 0 1 107.6 0c0 29.7-24.1 54.3-53.8 54.3zM447.9 448h-92.7V302.4c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7V448h-92.8V148.9h89.1v40.8h1.3c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3V448z" />
+                                    </svg>
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </section>

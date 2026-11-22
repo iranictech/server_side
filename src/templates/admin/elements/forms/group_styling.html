@@ -4,3 +4,195 @@
     {% include "admin/elements/forms/field.html" with field=edit_form.multi_page_editorial %}
     {% include "admin/elements/forms/field.html" with field=edit_form.display_journal_title %}
 </div>
+
+{% if edit_form.gold_color_primary_color %}
+<section class="gold-styling-colors">
+  <h3>Gold Theme Colors</h3>
+  <p class="help-text">
+    Customize the colors used across your journal.
+    Leave a field empty to use the default color.
+  </p>
+
+  <div class="gold-styling-grid">
+    {% for field in edit_form %}
+      {% if "gold_color_" in field.name %}
+      <div class="gold-styling-item">
+        <label for="{{ field.id_for_label }}">
+          <strong>{{ field.label }}</strong>
+        </label>
+
+        <div class="gold-styling-controls">
+          <input
+            type="color"
+            class="gold-styling-picker"
+            aria-label="Choose {{ field.label }}"
+            value="#B18539"
+          >
+
+          {{ field }}
+
+          <button
+            type="button"
+            class="button secondary hollow gold-styling-reset">
+            Use Default
+          </button>
+        </div>
+
+        {% for error in field.errors %}
+          <p class="form-error is-visible">
+            {{ error }}
+          </p>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<style>
+.gold-styling-colors {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid #ddd;
+}
+
+.gold-styling-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.gold-styling-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.gold-styling-item > label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.gold-styling-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gold-styling-picker {
+  width: 48px;
+  height: 40px;
+  padding: 2px;
+  cursor: pointer;
+  flex: 0 0 48px;
+}
+
+.gold-styling-controls .gold-color-hex {
+  width: 115px;
+  flex: 1 1 115px;
+  min-width: 90px;
+  margin: 0;
+}
+
+.gold-styling-reset {
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .gold-styling-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const section = document.querySelector(".gold-styling-colors");
+  if (!section) return;
+
+  const defaults = {
+    gold_color_primary_color: "#B18539",
+    gold_color_header_bg: "#FFFFFF",
+    gold_color_header_text: "#1A1A19",
+    gold_color_button_bg: null,
+    gold_color_button_hover: null,
+    gold_color_link_color: null,
+    gold_color_hero_bg: "#FFFFFF",
+    gold_color_open_access_bg: "#F9F4EC",
+    gold_color_open_access_text: "#434342",
+    gold_color_search_bg: "#F9F4EC",
+    gold_color_search_text: "#1A1A19",
+    gold_color_current_issues_bg: "#F9F4EC",
+    gold_color_current_issues_text: "#1A1A19",
+    gold_color_footer_bg: "#F9F4EC",
+    gold_color_footer_text: "#1A1A19"
+  };
+
+  const validHex = value => /^#[0-9a-fA-F]{6}$/.test(value);
+
+  const fields = Array.from(
+    section.querySelectorAll("input.gold-color-hex")
+  );
+
+  const byName = Object.fromEntries(
+    fields.map(field => [field.name, field])
+  );
+
+  function effectiveColor(name) {
+    const field = byName[name];
+
+    if (field && validHex(field.value.trim())) {
+      return field.value.trim();
+    }
+
+    if (
+      name === "gold_color_button_bg" ||
+      name === "gold_color_link_color"
+    ) {
+      return effectiveColor("gold_color_primary_color");
+    }
+
+    if (name === "gold_color_button_hover") {
+      return "#926F30";
+    }
+
+    return defaults[name] || "#B18539";
+  }
+
+  function refresh() {
+    fields.forEach(field => {
+      const item = field.closest(".gold-styling-item");
+      const picker = item.querySelector(".gold-styling-picker");
+
+      picker.value = effectiveColor(field.name);
+    });
+  }
+
+  fields.forEach(field => {
+    const item = field.closest(".gold-styling-item");
+    const picker = item.querySelector(".gold-styling-picker");
+    const reset = item.querySelector(".gold-styling-reset");
+
+    picker.addEventListener("input", () => {
+      field.value = picker.value.toUpperCase();
+      refresh();
+    });
+
+    field.addEventListener("input", refresh);
+
+    reset.addEventListener("click", () => {
+      field.value = "";
+      refresh();
+    });
+  });
+
+  refresh();
+})();
+</script>
+{% endif %}

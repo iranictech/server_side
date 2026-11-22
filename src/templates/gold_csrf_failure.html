@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <meta name="robots" content="noindex,nofollow">
+
+    <meta http-equiv="refresh"
+          content="5;url={{ continue_url }}">
+
+    <title>Session Verification | Gold</title>
+
+    <link rel="stylesheet"
+          href="{% static 'gold/css/base.css' %}?v=20261115-gold-final">
+
+    <style>
+        .gold-csrf-page,
+        .gold-csrf-page * {
+            box-sizing: border-box;
+        }
+
+        body.gold-csrf-page {
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #faf7f1;
+            font-family: 'Source Serif 4', Georgia, serif;
+        }
+
+        .gold-csrf-card {
+            width: 100%;
+            max-width: 520px;
+            padding: 44px 36px;
+            background: #fff;
+            border: 1px solid #eee5d6;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 15px 45px rgba(0,0,0,.06);
+        }
+
+        .gold-csrf-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f1e3;
+            color: var(--journal-primary-color, #b48732);
+        }
+
+        .gold-csrf-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .gold-csrf-label {
+            margin-bottom: 12px;
+            color: var(--journal-primary-color, #b48732);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .gold-csrf-title {
+            margin: 0 0 16px;
+            color: #252525;
+            font-size: 30px;
+            line-height: 1.3;
+        }
+
+        .gold-csrf-description {
+            max-width: 410px;
+            margin: 0 auto 26px;
+            color: #666;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .gold-csrf-button {
+            display: inline-flex;
+            min-width: 185px;
+            min-height: 46px;
+            padding: 12px 24px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            border: 1px solid
+                var(--journal-primary-color, #b48732);
+            background:
+                var(--journal-primary-color, #b48732);
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .gold-csrf-button:hover {
+            color: #fff;
+            filter: brightness(.94);
+        }
+
+        .gold-csrf-button:focus-visible {
+            outline: 2px solid
+                var(--journal-primary-color, #b48732);
+            outline-offset: 3px;
+        }
+
+        .gold-csrf-note {
+            margin: 20px 0 0;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #888;
+        }
+
+        @media (max-width: 600px) {
+            .gold-csrf-card {
+                padding: 32px 22px;
+            }
+
+            .gold-csrf-title {
+                font-size: 25px;
+            }
+
+            .gold-csrf-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="gold-csrf-page">
+
+<main class="gold-csrf-card">
+
+    <div class="gold-csrf-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3 21 7v5c0 5-3.5 8-9 10C6.5 20 3 17 3 12V7Z"/>
+            <path d="M12 8v5M12 17h.01"/>
+        </svg>
+    </div>
+
+    <div class="gold-csrf-label">
+        Security Verification
+    </div>
+
+    <h1 class="gold-csrf-title">
+        Your session could not be verified
+    </h1>
+
+    <p class="gold-csrf-description">
+        For security reasons, your request could not be
+        completed. Your session may have expired, or
+        the security token may be missing or invalid.
+        Please continue using a fresh page.
+    </p>
+
+    <a class="gold-csrf-button"
+       href="{{ continue_url }}">
+        {{ continue_label }}
+    </a>
+
+    <p class="gold-csrf-note">
+        You will be redirected automatically in 5 seconds.
+        Your previous form submission was not completed.
+    </p>
+
+</main>
+</body>
+</html>

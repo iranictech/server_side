@@ -1,0 +1,127 @@
+{% load static %}
+{% load gold_colors %}
+{% load i18n hooks press_url %}
+{% get_current_language as current_language %}
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="format-detection" content="telephone=no"/>
+    {% if request.journal %}
+        <meta name="description" content="{{ request.journal.description }}">{% endif %}
+    <title>{% block title %}{% if request.journal %}{{ request.journal.name }}{% else %}{{ request.press.name }}
+    {% endif %}{% endblock title %}</title>
+    {% block head %}{% endblock head %}
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="{% url 'website_sitemap' %}">
+
+    <link href="{% journal_url 'rss_articles' %}" type="application/atom+xml" rel="alternate"
+          title="Article Feed for Journal">
+    <link href="{% journal_url 'rss_news' %}" type="application/atom+xml" rel="alternate" title="News Feed for Journal">
+    {% include "common/elements/favicons.html" %}
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display:700,900" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link href="{% static "common/css/index.css" %}" rel="stylesheet">
+    {% block css %}{% endblock %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'gold/css/base.css' %}?v=20261115-gold-final">
+<link rel="stylesheet" href="{% static 'gold/css/home-elements.css' %}?v=20261117-editor-v1" data-gold-home-elements="v1">
+<script defer src="{% static 'gold/js/home-article.js' %}?v=20261116-article-v1"></script>
+<script defer src="{% static 'gold/js/home-editor.js' %}?v=20261117-editor-v1"></script>
+    {% hook 'base_head_css' %}
+
+{% if request.journal and request.resolver_match.url_name == 'website_index' %}
+{% include "journal/social_meta.html" %}
+{% endif %}
+
+{% gold_color_overrides request.journal %}
+</head>
+<body>
+{% include "common/elements/skip_to_main_content.html" %}
+<div class="container">
+    {% if request.journal %}
+        {% include "core/nav.html" %}
+    {% elif request.press %}
+        {% include "press/nav.html" %}
+    {% endif %}
+    <main id="main-content">
+
+{% if messages %}
+<div class="gold-toast-stack" aria-label="Notifications">
+    {% for message in messages %}
+    <div class="gold-toast gold-toast--{{ message.level_tag }}"
+         role="{% if message.level >= 30 %}alert{% else %}status{% endif %}">
+        <div class="gold-toast__icon" aria-hidden="true">
+            {% if message.level_tag == 'success' %}
+            <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="m7.5 12 3 3 6-6"/>
+            </svg>
+            {% elif message.level_tag == 'error' or message.level_tag == 'danger' %}
+            <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="m9 9 6 6m0-6-6 6"/>
+            </svg>
+            {% elif message.level_tag == 'warning' %}
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M10.2 3.8 1.7 18.4A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.8-2.6L13.8 3.8a2 2 0 0 0-3.6 0Z"/>
+                <path d="M12 9v5m0 3h.01"/>
+            </svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 11v6m0-10h.01"/>
+            </svg>
+            {% endif %}
+        </div>
+
+        <div class="gold-toast__body">
+            <div class="gold-toast__title">
+                {% if message.level_tag == 'success' %}Success
+                {% elif message.level_tag == 'error' or message.level_tag == 'danger' %}Error
+                {% elif message.level_tag == 'warning' %}Warning
+                {% else %}Info{% endif %}
+            </div>
+            <div class="gold-toast__message">{{ message|linebreaksbr }}</div>
+        </div>
+
+        <button class="gold-toast__close"
+                type="button"
+                aria-label="Dismiss notification"
+                onclick="this.closest('.gold-toast').remove()">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 5 19 19M19 5 5 19"/>
+            </svg>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+        {% block body %}{% endblock body %}
+    </main>
+    <footer class="site-footer" id="footer">
+      {% include "core/footer.html" %}
+    </footer>
+</div>
+{% include "common/elements/analytics.html" %}
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+{% block js %}{% endblock %}
+<script src="{% static 'gold/js/gold.js' %}?v=20261115-gold-final" defer></script>
+
+</body>
+</html>

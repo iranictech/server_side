@@ -1,5 +1,6 @@
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render, get_object_or_404
 from core.homepage_elements.featured import models
 from submission import models as submission_models
@@ -15,17 +16,59 @@ def featured_articles(request):
         date_published__isnull=False, journal=request.journal
     ).exclude(pk__in=featured_article_pks)
 
-    if "article_id" in request.POST:
+    # Note edits are restricted to the current journal's active Editor-in-Chief.
+    # The existing editor/staff/manager permissions for add, delete, and order
+    # remain unchanged.
+    if request.method == "POST" and "save_note" in request.POST:
+        if not request.user.is_editor_in_chief(request):
+            raise PermissionDenied("Only the active Editor-in-Chief can edit notes.")
+
+        try:
+            featured_pk = int(request.POST.get("save_note", ""))
+        except (TypeError, ValueError):
+            raise Http404("Invalid featured article")
+
+        featured = get_object_or_404(
+            models.FeaturedArticle,
+            pk=featured_pk,
+            journal=request.journal,
+            article__journal=request.journal,
+        )
+        note = request.POST.get(f"editor_note_{featured.pk}", "").strip()
+        if len(note) > 5000:
+            return HttpResponseBadRequest("Editor's note exceeds 5000 characters.")
+        featured.editor_note = note
+        featured.save(update_fields=["editor_note"])
+        return redirect(reverse("featured_articles_setup"))
+
+    if request.method == "POST" and "article_id" in request.POST:
         article_id = request.POST.get("article_id")
         article = get_object_or_404(
-            submission_models.Article, pk=article_id, journal=request.journal
+            submission_models.Article,
+            pk=article_id,
+            journal=request.journal,
+            date_published__isnull=False,
         )
+
+        # The optional note belongs to the article being selected, not to the
+        # editor profile or the Article abstract.
+        new_note = request.POST.get("new_editor_note", "").strip()
+        if new_note and not request.user.is_editor_in_chief(request):
+            raise PermissionDenied("Only the active Editor-in-Chief can add notes.")
+        if len(new_note) > 5000:
+            return HttpResponseBadRequest("Editor's note exceeds 5000 characters.")
+
+        if models.FeaturedArticle.objects.filter(
+            journal=request.journal, article=article
+        ).exists():
+            return HttpResponseBadRequest("Article is already featured.")
 
         models.FeaturedArticle.objects.create(
             article=article,
             journal=request.journal,
             added_by=request.user,
             sequence=request.journal.next_featured_article_order(),
+            editor_note=new_note,
         )
 
         return redirect(reverse("featured_articles_setup"))
@@ -41,6 +84,7 @@ def featured_articles(request):
     template = "featured_setup.html"
     context = {
         "featured_articles": featured_arts,
+        "can_edit_editor_note": request.user.is_editor_in_chief(request),
         "articles": articles,
     }
 

@@ -1,0 +1,112 @@
+{% extends 'core/base.html' %}
+{% load i18n static %}
+{% block title %}{% trans 'Search Results' %}{% endblock %}
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'gold/css/search-results.css' %}?v=20261116-v2">{% endblock %}
+{% block body %}
+<div class="gold-search-page">
+  <div class="achive_page_two_breadcrumb">
+    <div class="achive_page_two_container_about">
+      <ul class="achive_page_two_breadcrumb_ul">
+        <li><a href="{% url 'website_index' %}">{% trans 'Home' %}</a></li>
+        <li class="achive_page_two_sep" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#81807E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
+        <li class="achive_page_two_current">{% trans 'Search Results' %}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container search-container">
+    <form method="get" action="{% url 'search' %}" class="search-box" role="search">
+      <input type="search" id="liveSearchInput" name="article_search" value="{{ article_search }}" placeholder="{% trans 'Search articles, abstracts and full text...' %}" minlength="3" maxlength="100" aria-label="{% trans 'Search articles' %}">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <button type="submit">{% trans 'Search' %}</button>
+    </form>
+    <a href="#gold-search-filters" class="advanced-search">{% trans 'Advanced search' %}</a>
+    {% if error %}<p role="alert" class="gold-search-error">{{ error }}</p>{% endif %}
+  </div>
+
+  <div class="container main-layout">
+    <aside class="achive_page_two_sidebar" id="gold-search-filters">
+      <h2>{% trans 'Browse by' %} :</h2>
+      <form method="get" action="{% url 'search' %}" id="gold-filter-form">
+        <input type="hidden" name="article_search" value="{{ article_search }}">
+        {% if keyword %}<input type="hidden" name="keyword" value="{{ keyword }}">{% endif %}
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <div class="achive_page_two_accordion achive_page_two_active">
+          <button type="button" class="achive_page_two_accordion_header" aria-expanded="true">
+            <h3>{% trans 'Content type' %}</h3><span class="achive_page_two_accordion_icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 10.5L14 17.5L21 10.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#585756"/></svg></span>
+          </button>
+          <div class="achive_page_two_accordion_content">
+            <ul class="achive_page_two_filter_list">
+              {% for section in sections %}
+              <li><label><input type="checkbox" class="achive_page_two_custom_checkbox" name="section" value="{{ section.pk }}" {% if section.pk in selected_sections %}checked{% endif %}> {{ section.name }} ({{ section.result_count }})</label></li>
+              {% empty %}<li>{% trans 'No content types' %}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="achive_page_two_accordion achive_page_two_active">
+          <button type="button" class="achive_page_two_accordion_header" aria-expanded="true">
+            <h3>{% trans 'Subject' %}</h3><span class="achive_page_two_accordion_icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 10.5L14 17.5L21 10.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#585756"/></svg></span>
+          </button>
+          <div class="achive_page_two_accordion_content">
+            <ul class="achive_page_two_filter_list">
+              {% for topic in topics %}
+              <li><label><input type="checkbox" class="achive_page_two_custom_checkbox" name="subject" value="{{ topic.pk }}" {% if topic.pk in selected_topics %}checked{% endif %}> {{ topic.word }} ({{ topic.result_count }})</label></li>
+              {% empty %}<li>{% trans 'No subjects' %}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="achive_page_two_author_section">
+          <button type="submit" class="achive_page_two_clear_btn">{% trans 'Apply all filters' %}</button>
+          <a class="achive_page_two_clear_btn_outline" href="{{ clear_filters_url }}">{% trans 'Clear all filters' %}</a>
+        </div>
+      </form>
+    </aside>
+    <main class="results-area">
+      <div class="results-top-bar">
+        <span>{% blocktrans with first=first_result last=last_result total=paginator.count %}Showing {{ first }}-{{ last }} of {{ total }} results{% endblocktrans %}</span>
+        <div class="sort-group"><label for="gold-results-sort">{% trans 'Sort articles by' %}</label>
+          <div class="custom-select-wrapper">
+            <select class="custom-select" id="gold-results-sort" data-gold-sort>
+              <option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>{% trans 'Relevance' %}</option>
+              <option value="title" {% if sort == 'title' %}selected{% endif %}>{% trans 'Title A-Z' %}</option>
+              <option value="-title" {% if sort == '-title' %}selected{% endif %}>{% trans 'Title Z-A' %}</option>
+              <option value="-date_published" {% if sort == '-date_published' %}selected{% endif %}>{% trans 'Newest' %}</option>
+              <option value="date_published" {% if sort == 'date_published' %}selected{% endif %}>{% trans 'Oldest' %}</option>
+            </select><span class="custom-select-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7 10.5L14 17.5L21 10.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#585756"/></svg></span>
+          </div>
+        </div>
+      </div>
+      {% for article in articles %}
+      <article class="article-item">
+        <div class="article-meta">
+          <span>{% if article.page_numbers %}{{ article.page_numbers }} {% trans 'Pages' %}{% elif article.first_page %}{{ article.first_page }}{% if article.last_page %}–{{ article.last_page }}{% endif %} {% trans 'Pages' %}{% endif %}</span>
+          <span>{% if article.date_accepted %}{% trans 'Accepted on' %} {{ article.date_accepted|date:'d M Y' }}{% else %}{% trans 'Published on' %} {{ article.date_published|date:'d M Y' }}{% endif %}</span>
+        </div>
+        <h2 class="article-title"><a class="article-title-a" href="{% if article.is_remote %}{{ article.remote_url }}{% else %}{{ article.url }}{% endif %}">{{ article.title|striptags }}</a></h2>
+        <div class="article-authors">{% for author in article.frozenauthor_set.all %}{{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans 'Author information unavailable' %}{% endfor %}</div>
+        <div class="article-links">
+          {% for galley in article.gold_public_pdfs %}{% if forloop.first %}<a href="{% url 'article_file_download' 'id' article.id galley.file.id %}" target="_blank" rel="noopener">PDF <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3.332 14.166V15.833C3.332 16.275 3.507 16.699 3.82 17.011C4.133 17.324 4.557 17.5 4.999 17.5H14.999C15.441 17.5 15.865 17.324 16.177 17.011C16.49 16.699 16.665 16.275 16.665 15.833V14.166M14.165 9.166L9.999 13.333L5.832 9.166M9.999 13.333V3.333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}{% endfor %}
+          <a href="{% if article.is_remote %}{{ article.remote_url }}{% else %}{{ article.url }}{% endif %}"
+             class="gold-article-share" data-gold-article-share
+             data-share-title="{{ article.title|striptags }}"
+             aria-label="{% trans 'Share article' %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <path d="m8.7 13.5 6.6 4"/><path d="m15.3 6.5-6.6 4"/>
+            </svg>
+            <span class="gold-share-label">{% trans 'Share' %}</span>
+          </a>
+        </div>
+      </article>
+      {% empty %}<p class="gold-search-empty">{% trans 'No articles matched your search and filters.' %}</p>{% endfor %}
+      {% if paginator.num_pages > 1 %}
+      <nav class="achive_page_one_pagination" aria-label="{% trans 'Search result pages' %}">
+        {% if previous_url %}<a class="achive_page_one_page_btn achive_page_one_arrow" href="{{ previous_url }}" aria-label="{% trans 'Previous page' %}">‹</a>{% endif %}
+        {% for item in page_links %}{% if item.url %}<a class="achive_page_one_page_btn {% if item.active %}achive_page_one_active{% endif %}" {% if item.active %}aria-current="page"{% endif %} href="{{ item.url }}">{{ item.number }}</a>{% else %}<span class="achive_page_one_page_btn achive_page_one_dots">…</span>{% endif %}{% endfor %}
+        {% if next_url %}<a class="achive_page_one_page_btn achive_page_one_arrow" href="{{ next_url }}" aria-label="{% trans 'Next page' %}">›</a>{% endif %}
+      </nav>{% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+{% block js %}{{ block.super }}<script defer src="{% static 'gold/js/search-results.js' %}?v=20261116-v2"></script>{% endblock %}

@@ -340,3 +340,9 @@ urlpatterns = [
         name="journal_users",
     ),
 ]
+
+# GOLD_ISSUE_EXPORT_V1: public journal-scoped metadata exports.
+from django.urls import re_path as _gold_issue_re_path
+from journal.gold_issue_export import export_issue_xlsx as _gold_export_issue_xlsx, export_issue_xml as _gold_export_issue_xml
+urlpatterns.insert(0, _gold_issue_re_path(r"^gold-issue-metadata/(?P<issue_id>[0-9]+)\.xlsx$", _gold_export_issue_xlsx, name="gold_issue_metadata_xlsx"))
+urlpatterns.insert(0, _gold_issue_re_path(r"^gold-issue-metadata/(?P<issue_id>[0-9]+)\.xml$", _gold_export_issue_xml, name="gold_issue_metadata_xml"))

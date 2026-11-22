@@ -118,6 +118,9 @@ class TestFilesHandler(TestCase):
             self,
             self.test_file_two,
         )
+        # The download view requires the file to belong to this article.
+        file.article_id = self.article_in_production.pk
+        file.save(update_fields=["article_id"])
 
         clear_cache()
         clear_script_prefix()

@@ -1,0 +1,21 @@
+{% load i18n %}
+<section class="journal-finder" id="gold-journal-finder" aria-labelledby="gold-jf-title">
+  <div class="journal-finder__content">
+    <div class="journal-finder__intro">
+      <h2 id="gold-jf-title" class="journal-finder__title">{% trans 'Not sure this is the right journal?' %}</h2>
+      <p class="journal-finder__description">{% trans 'Paste your title, abstract or keywords and Journal Finder checks them against our scope.' %}</p>
+    </div>
+    <form class="journal-finder__form" method="get" action="{% url 'search' %}">
+      {# GOLD_SEARCH_FINDER_V1: GET request to standard journal search #}
+      <label class="journal-finder__sr-only" for="gold-jf-input">{% trans 'Title, abstract, or keywords' %}</label>
+      <input class="journal-finder__input" type="search" id="gold-jf-input" name="article_search" minlength="3" maxlength="100" required placeholder="{% trans 'Paste title / abstract / keywords...' %}">
+      <button class="journal-finder__button" type="submit" aria-label="{% trans 'Check journal fit' %}" title="{% trans 'Check journal fit' %}">
+        <svg class="journal-finder__icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg>
+      </button>
+      <input type="hidden" name="sort" value="relevance">
+    </form>
+    {% include 'core/homepage_elements/_journal_topics.html' %}
+  </div>
+  <div class="gold-jf-result" data-gold-finder-result role="status" aria-live="polite" hidden></div>
+
+</section>

@@ -317,6 +317,7 @@ def switch_active_role(request, role_slug):
 
     return redirect(reverse("core_dashboard"))
 
+
 @login_required
 def user_logout(request):
     """
@@ -1003,6 +1004,29 @@ def dashboard(request):
         "workflow_element_url": request.GET.get("workflow_element_url", False),
     }
 
+    # UA DASHBOARD REAL METRICS V1
+    if request.journal.code == "ua" and (context["is_editor"] or request.user.is_staff):
+        context["ua_overview_enabled"] = True
+        context["ua_total_articles_count"] = submission_models.Article.objects.filter(
+            journal=request.journal
+        ).count()
+        context["ua_under_review_count"] = submission_models.Article.objects.filter(
+            journal=request.journal,
+            stage=submission_models.STAGE_UNDER_REVIEW,
+        ).count()
+        context["ua_completed_reviews_count"] = (
+            review_models.ReviewAssignment.objects.filter(
+                article__journal=request.journal,
+                is_complete=True,
+                date_declined__isnull=True,
+            ).count()
+        )
+        context["ua_recent_articles"] = (
+            submission_models.Article.objects.filter(journal=request.journal)
+            .exclude(stage=submission_models.STAGE_UNSUBMITTED)
+            .order_by("-date_submitted", "-pk")[:5]
+        )
+
     return render(request, template, context)
 
 
@@ -1281,7 +1305,40 @@ def edit_settings_group(request, display_group):
         if not settings and not attr_form_object:
             raise Http404
 
-        if request.POST:
+        if request.POST and display_group == "styling":
+            from django.db import transaction
+
+            edit_form = forms.GeneratedSettingForm(
+                request.POST,
+                settings=settings,
+            )
+
+            attr_form = attr_form_object(
+                request.POST,
+                request.FILES,
+                instance=request.journal,
+            )
+
+            edit_valid = edit_form.is_valid()
+            attr_valid = attr_form.is_valid()
+
+            if edit_valid and attr_valid:
+                with transaction.atomic():
+                    edit_form.save(
+                        group=setting_group,
+                        journal=request.journal,
+                    )
+                    attr_form.save()
+
+                cache.clear()
+
+                return language_override_redirect(
+                    request,
+                    "core_edit_settings_group",
+                    {"display_group": display_group},
+                )
+
+        if request.POST and display_group != "styling":
             edit_form = forms.GeneratedSettingForm(
                 request.POST,
                 settings=settings,

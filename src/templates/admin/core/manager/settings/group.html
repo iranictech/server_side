@@ -13,6 +13,11 @@
 
 {% block body %}
     <section class="group-settings">
+        {% if request.journal %}
+          {% if group == 'journal' or group == 'images' or group == 'styling' %}
+            {% include "admin/core/manager/settings/journal_tabs.html" with active_tab=group %}
+          {% endif %}
+        {% endif %}
         <div class="row expanded">
             <div class="large-12 columns">
                 <div class="box">

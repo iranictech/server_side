@@ -684,6 +684,25 @@ def get_settings_to_edit(display_group, journal, user):
             },
         ]
         setting_group = "styling"
+
+        if (
+            journal
+            and journal.get_setting("general", "journal_theme") == "gold"
+        ):
+            from core.gold_theme_colors import GOLD_COLOR_TOKENS
+
+            for name, token, label, default in GOLD_COLOR_TOKENS:
+                setting_name = f"gold_color_{name}"
+
+                group_of_settings.append(
+                    {
+                        "name": setting_name,
+                        "object": setting_handler.get_setting(
+                            "styling", setting_name, journal
+                        ),
+                    }
+                )
+
     elif display_group == "editorial":
         group_of_settings = [
             {

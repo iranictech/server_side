@@ -7,6 +7,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 from django import forms
+from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.template.defaultfilters import linebreaksbr
@@ -17,6 +18,7 @@ from core import models as core_models, forms as core_forms
 from core.widgets import JanewayFileInput
 from utils import setting_handler
 from utils.forms import FakeModelForm, HTMLDateInput, HTMLSwitchInput
+from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 
 
 class DraftDecisionForm(forms.ModelForm):
@@ -111,6 +113,14 @@ class ReviewAssignmentForm(forms.ModelForm, core_forms.ConfirmableIfErrorsForm):
             self.fields["form"].initial = self.instance.form
             self.fields["form"].disabled = True
 
+    def clean_reviewer(self):
+        reviewer = self.cleaned_data.get("reviewer")
+        try:
+            enforce_reviewer_invitation_coi(self.article, reviewer)
+        except PermissionDenied as exc:
+            raise forms.ValidationError(str(exc)) from exc
+        return reviewer
+
     def save(self, commit=True):
         review_assignment = super().save(commit=False)
         review_assignment.editor = self.editor
@@ -119,6 +129,7 @@ class ReviewAssignmentForm(forms.ModelForm, core_forms.ConfirmableIfErrorsForm):
         review_assignment.access_code = uuid4()
 
         if commit:
+            enforce_reviewer_invitation_coi(self.article, review_assignment.reviewer)
             review_assignment.save()
 
         return review_assignment

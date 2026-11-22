@@ -429,10 +429,33 @@ class GeneratedSettingForm(forms.Form):
         settings = kwargs.pop("settings", None)
         super(GeneratedSettingForm, self).__init__(*args, **kwargs)
         self.translatable_field_names = []
+
+        from core.gold_theme_colors import GOLD_COLOR_TOKENS
+
+        gold_color_names = {
+            f"gold_color_{name}"
+            for name, token, label, default in GOLD_COLOR_TOKENS
+        }
+
         for field in settings:
             object = field["object"]
 
-            if object.setting.types == "char":
+            if field["name"] in gold_color_names:
+                self.fields[field["name"]] = forms.RegexField(
+                    regex=r"^#[0-9A-Fa-f]{6}$",
+                    required=False,
+                    widget=forms.TextInput(
+                        attrs={
+                            "class": "gold-color-hex",
+                            "placeholder": "#B18539",
+                            "maxlength": "7",
+                        }
+                    ),
+                    error_messages={
+                        "invalid": "Enter a valid HEX color such as #B18539."
+                    },
+                )
+            elif object.setting.types == "char":
                 self.fields[field["name"]] = forms.CharField(
                     widget=forms.TextInput(), required=False
                 )

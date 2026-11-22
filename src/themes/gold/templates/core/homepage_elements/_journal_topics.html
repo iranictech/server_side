@@ -1,0 +1,13 @@
+{% load i18n %}
+{% with topics=request.journal.keywords.all %}
+  {% if topics %}
+    <div class="journal-finder__topics" aria-label="{% trans 'Topics in this Journal' %}">
+      <span class="journal-finder__topics-title">{% trans 'Topics in this Journal' %}:</span>
+      <span class="journal-finder__topics-list">
+        {% for topic in topics %}
+          <a class="journal-finder__topic" href="{% url 'search' %}?article_search={{ topic.word|urlencode }}&sort=relevance">{{ topic.word }}</a>{% if not forloop.last %}<span class="journal-finder__separator" aria-hidden="true"> / </span>{% endif %}
+        {% endfor %}
+      </span>
+    </div>
+  {% endif %}
+{% endwith %}

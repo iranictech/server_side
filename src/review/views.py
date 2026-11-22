@@ -29,6 +29,7 @@ from core import (
 )
 from events import logic as event_logic
 from review import models, logic, forms, hypothesis
+from reviewer_matching.invitation_policy import enforce_reviewer_invitation_coi
 from review.const import (
     EditorialDecisions as ED,
     ReviewerDecisions as RD,
@@ -1320,7 +1321,12 @@ def notify_reviewer(request, article_id, review_id):
         pk=article_id,
         journal=request.journal,
     )
-    review = get_object_or_404(models.ReviewAssignment, pk=review_id)
+    review = get_object_or_404(
+        models.ReviewAssignment,
+        pk=review_id,
+        article=article,
+    )
+    enforce_reviewer_invitation_coi(article, review.reviewer)
 
     email_context = logic.get_reviewer_notification_context(
         request, article, request.user, review

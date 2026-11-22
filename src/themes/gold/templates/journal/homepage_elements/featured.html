@@ -1,0 +1,56 @@
+{# Existing FeaturedArticle entries and EditorialGroup; original editor UI classes. #}
+{% load gold_home_data %}
+{% gold_editor_in_chief request.journal as chief %}
+{% if featured_articles or chief %}
+<section class="section_editor_container" data-gold-home-element="featured" aria-labelledby="gold-editors-choice-title">
+    <div class="section_editor_section_header">
+        <div class="section_editor_title_wrapper">
+            <div class="section_editor_accent_line"></div>
+            <h1 id="gold-editors-choice-title">Editor's choice</h1>
+        </div>
+        <p class="section_editor_subtitle">A standout article carefully selected by our editors for its significance, originality, and meaningful contribution to the field.</p>
+    </div>
+    <div class="section_editor_main_content">
+        {% if featured_articles %}
+        <div class="section_editor_article_column">
+            {% for fa in featured_articles %}
+            <div class="section_editor_article_page" data-page="{{ forloop.counter }}"{% if not forloop.first %} hidden{% endif %}>
+                <h2 class="section_editor_article_title"><a href="{% if fa.article.is_remote %}{{ fa.article.remote_url }}{% else %}{{ fa.article.url }}{% endif %}">{{ fa.article.title|striptags }}</a></h2>
+                <div class="section_editor_authors">{{ fa.article.author_list }}</div>
+                <p class="section_editor_article_excerpt">{% if fa.editor_note %}<strong>Editor's Note:</strong> {{ fa.editor_note|linebreaksbr }}{% else %}{{ fa.article.abstract|striptags|truncatewords:65 }}{% endif %}
+                    <a class="section_editor_read_more" href="{% if fa.article.is_remote %}{{ fa.article.remote_url }}{% else %}{{ fa.article.url }}{% endif %}">Read More...</a>
+                </p>
+                {% if fa.article.date_published %}<div class="section_editor_date">{{ fa.article.date_published|date:"F j, Y" }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            {% if featured_articles|length > 1 %}
+            <div class="section_editor_pagination" aria-label="Featured article pages">
+                <button type="button" class="section_editor_page_btn section_editor_arrow" data-editor-prev aria-label="Previous article"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.75 0.75L0.75 6.75L6.75 12.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#6C6C6A" /></svg></button>
+                {% for fa in featured_articles %}<button type="button" class="section_editor_page_btn{% if forloop.first %} section_editor_active{% endif %}" data-editor-page="{{ forloop.counter }}" aria-label="Article {{ forloop.counter }}">{{ forloop.counter }}</button>{% endfor %}
+                <button type="button" class="section_editor_page_btn section_editor_arrow" data-editor-next aria-label="Next article"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#6C6C6A" /></svg></button>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if chief %}
+        <div class="section_editor_editor_column">
+            <div class="section_editor_editor_header">
+                <h3>Editor-in-Chief</h3>
+                <a href="{% url 'editorial_team' %}" class="section_editor_view_all">View Editorial Board
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.75 0.75L0.75 10.75M10.75 9.75V0.75H1.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#B18539" /></svg>
+                </a>
+            </div>
+            <div class="section_editor_editor_profile">
+                {% if chief.image_url %}<img src="{{ chief.image_url }}" alt="{{ chief.name }}" class="section_editor_profile_img" loading="lazy">{% endif %}
+                <div class="section_editor_profile_info">
+                    <h4>{{ chief.name }}</h4>
+                    {% if chief.affiliation %}<p class="section_editor_profile_desc">{{ chief.affiliation }}</p>{% endif %}
+                    {% if chief.orcid_url %}<a href="{{ chief.orcid_url }}" target="_blank" rel="noopener noreferrer" class="section_editor_orcid_link">ORCID profile</a>{% endif %}
+                </div>
+            </div>
+            {# Editor's Note intentionally not invented; needs a separate journal-managed setting. #}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}

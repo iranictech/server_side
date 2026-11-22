@@ -1678,3 +1678,84 @@ def issue_articles_change(sender, **kwargs):
 
 
 m2m_changed.connect(issue_articles_change, sender=Issue.articles.through)
+
+
+# Journal Metrics: one profile for each journal. Automatic values are updated
+# by journal.metrics_service.refresh_metrics; policy/manual fields are independent.
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class JournalMetrics(models.Model):
+    """Journal-specific policy values and cached operational statistics."""
+
+    journal = models.OneToOneField(
+        "journal.Journal",
+        on_delete=models.CASCADE,
+        related_name="metrics_profile",
+    )
+
+    # Editor-managed journal policy (not measured performance).
+    review_target_days = models.PositiveIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1)]
+    )
+    issues_per_year = models.PositiveIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1)]
+    )
+    open_access_policy = models.CharField(
+        max_length=16,
+        choices=(
+            ("unknown", "Not specified"),
+            ("open", "Open access"),
+            ("hybrid", "Hybrid"),
+            ("subscription", "Subscription"),
+        ),
+        default="unknown",
+    )
+    apc_policy = models.CharField(
+        max_length=16,
+        choices=(
+            ("unknown", "Not specified"),
+            ("free", "No APC"),
+            ("paid", "APC payable"),
+        ),
+        default="unknown",
+    )
+    apc_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    apc_currency = models.CharField(max_length=3, blank=True)
+
+    # Optional, explicitly documented fallback figures (never overwrite auto).
+    manual_acceptance_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    manual_review_days = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    manual_source = models.TextField(blank=True)
+
+    # Measured: rolling 365 days, populated by an explicit refresh.
+    submitted_count = models.PositiveIntegerField(default=0, editable=False)
+    accepted_count = models.PositiveIntegerField(default=0, editable=False)
+    rejected_count = models.PositiveIntegerField(default=0, editable=False)
+    published_count = models.PositiveIntegerField(default=0, editable=False)
+    published_issues_count = models.PositiveIntegerField(default=0, editable=False)
+    completed_reviews_count = models.PositiveIntegerField(default=0, editable=False)
+    acceptance_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True, editable=False
+    )
+    average_review_days = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True, editable=False
+    )
+    calculated_at = models.DateTimeField(null=True, blank=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Journal metrics"
+        verbose_name_plural = "Journal metrics"
+
+    def __str__(self):
+        return f"Metrics for {self.journal.code}"

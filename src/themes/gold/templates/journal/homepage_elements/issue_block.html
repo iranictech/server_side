@@ -1,0 +1,46 @@
+{# Existing Current Issue homepage element. No fabricated issue PDF link. #}
+{% load gold_home_data %}
+{% gold_current_issue_info request.journal as issue_data %}
+{% if issue_data %}
+<section class="current-issues" data-gold-home-element="current-issue" aria-labelledby="gold-current-title">
+    <div class="current-issues__inner">
+        <header class="current-issues__header">
+            <div class="current-issues__heading">
+                <h2 class="current-issues__title" id="gold-current-title">Current Issues</h2>
+                <p class="current-issues__subtitle">{% if issue_data.issue.short_description %}{{ issue_data.issue.short_description }}{% else %}Explore the current issue of {{ request.journal.name }}.{% endif %}</p>
+            </div>
+            <div class="current-issues__actions">
+                <a class="current-issues__download" href="{% url 'gold_issue_metadata_xlsx' issue_data.issue.pk %}" download title="Export issue metadata as Excel (.xlsx)" aria-label="Export metadata as Excel">
+                    <span>Export Metadata</span>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 3V16M12 16L16 11.625M12 16L8 11.625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+
+                <a class="current-issues__view" href="{% url 'journal_issue' issue_data.issue.pk %}"><span>View issue</span>
+                    <svg class="current-issues__view-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+                </a>
+            </div>
+        </header>
+        <div class="current-issues__body">
+            <article class="current-issues__article">
+                {% if issue_data.lead_article %}
+                    <h3 class="current-issues__article-title">{{ issue_data.lead_article.title|striptags }}</h3>
+                    <p class="current-issues__article-description">{{ issue_data.lead_article.abstract|striptags|truncatewords:85 }}
+                    <a class="current-issues__read-more" href="{% if issue_data.lead_article.is_remote %}{{ issue_data.lead_article.remote_url }}{% else %}{{ issue_data.lead_article.url }}{% endif %}">Read More...</a></p>
+                {% else %}
+                    <h3 class="current-issues__article-title">{% if issue_data.issue.issue_title %}{{ issue_data.issue.issue_title }}{% else %}Volume {{ issue_data.issue.volume }} · Issue {{ issue_data.issue.issue }}{% endif %}</h3>
+                    {% if issue_data.issue.short_description %}<p class="current-issues__article-description">{{ issue_data.issue.short_description }}</p>{% endif %}
+                {% endif %}
+            </article>
+            <dl class="current-issues__stats">
+                <div class="current-issues__stat"><dt class="current-issues__stat-label">Date</dt><dd class="current-issues__stat-value">{{ issue_data.issue.date|date:"Y" }}</dd></div>
+                <div class="current-issues__stat"><dt class="current-issues__stat-label">Volume</dt><dd class="current-issues__stat-value">{{ issue_data.issue.volume }}</dd></div>
+                <div class="current-issues__stat"><dt class="current-issues__stat-label">Issue</dt><dd class="current-issues__stat-value">{{ issue_data.issue.issue }}</dd></div>
+                <div class="current-issues__stat"><dt class="current-issues__stat-label">Article in Is</dt><dd class="current-issues__stat-value">{{ issue_data.article_count }}</dd></div>
+            </dl>
+        </div>
+    </div>
+</section>
+{% endif %}

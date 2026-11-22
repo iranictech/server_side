@@ -1,0 +1,42 @@
+{# Article card: DOM and CSS classes preserved from the supplied UI. #}
+<article class="article_section_article_card {% if is_main %}article_section_is_main{% else %}article_section_side_article_item{% endif %}" data-id="article-{{ article.pk }}" data-number="{{ number }}">
+    <div class="article_section_side_view">
+        <div class="article_section_side_number">{{ number|stringformat:"02d" }}</div>
+        <a href="{% if article.is_remote %}{{ article.remote_url }}{% else %}{{ article.url }}{% endif %}" class="article_section_side_title">{{ article.title|striptags|truncatechars:145 }}</a>
+    </div>
+    <div class="article_section_main_view">
+        <div class="article_section_main_article_top">
+            <div class="article_section_big_number">{{ number|stringformat:"02d" }}</div>
+            <div class="article_section_volume_info">
+                {% if article.primary_issue %}<a href="{% url 'journal_issue' article.primary_issue.pk %}">Vol. {{ article.primary_issue.volume }} No. {{ article.primary_issue.issue }}</a>{% endif %}
+            </div>
+        </div>
+        <h2 class="article_section_main_title"><a class="gold-article-title-link" href="{% if article.is_remote %}{{ article.remote_url }}{% else %}{{ article.url }}{% endif %}">{{ article.title|striptags }}</a></h2>
+        <div class="article_section_authors">{{ article.author_list }}</div>
+        <p class="article_section_abstract">{{ article.abstract|striptags|truncatewords:75 }}
+            <a href="{% if article.is_remote %}{{ article.remote_url }}{% else %}{{ article.url }}{% endif %}" class="article_section_read_more">Read More...</a>
+        </p>
+        <div class="article_section_article_footer">
+            <div class="article_section_doi">
+                {% with doi_url=article.get_doi_url %}
+                    {% if doi_url %}<a class="link_doi" href="{{ doi_url }}" target="_blank" rel="noopener noreferrer">{{ doi_url }}</a>{% endif %}
+                {% endwith %}
+            </div>
+
+            {# GOLD_ARTICLE_METRIC_DISPLAY_V2 #}
+            <div class="gold-article-metric-and-date">
+              <span class="gold-article-metric" title="{% if metric_kind == 'citations' %}Citation count{% else %}Article views{% endif %}">
+                {% if metric_kind == 'citations' %}
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3.332 14.166V15.833C3.332 16.275 3.507 16.699 3.82 17.011C4.133 17.324 4.557 17.5 4.999 17.5H14.999C15.441 17.5 15.865 17.324 16.177 17.011C16.49 16.699 16.665 16.275 16.665 15.833V14.166M14.165 9.166L9.999 13.333L5.832 9.166M9.999 13.333V3.333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="gold-article-metric-number">{{ article.gold_citation_display|default:"-" }}</span>
+                {% else %}
+                <svg width="20" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.2 12S5.7 5.5 12 5.5 21.8 12 21.8 12 18.3 18.5 12 18.5 2.2 12 2.2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                <span class="gold-article-metric-number">{% if article.gold_view_count == 0 %}0{% elif article.gold_view_count %}{{ article.gold_view_count }}{% else %}—{% endif %}</span>
+                {% endif %}
+              </span>
+              {% if article.date_published %}<div class="article_section_date">{{ article.date_published|date:"F j, Y" }}</div>{% endif %}
+            </div>
+
+        </div>
+    </div>
+</article>
