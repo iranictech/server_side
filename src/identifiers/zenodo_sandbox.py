@@ -37,7 +37,7 @@ def _sandbox_url(url):
     return url
 
 
-def journal_article_metadata(*, title, creators, description, publication_date=None):
+def journal_article_metadata(*, title, creators, description, license_id, publication_date=None):
     """Validate the minimum metadata required by the legacy deposition API."""
     if not isinstance(title, str) or not title.strip():
         raise ValueError("Article title is required")
@@ -54,6 +54,8 @@ def journal_article_metadata(*, title, creators, description, publication_date=N
             if creator.get(optional):
                 clean[optional] = str(creator[optional]).strip()
         cleaned_creators.append(clean)
+    if not isinstance(license_id, str) or not license_id.strip():
+        raise ValueError("An explicitly approved article license is required")
     publication_date = publication_date or date.today()
     if isinstance(publication_date, date):
         publication_date = publication_date.isoformat()
@@ -69,7 +71,7 @@ def journal_article_metadata(*, title, creators, description, publication_date=N
         "creators": cleaned_creators,
         "publication_date": publication_date,
         "access_right": "open",
-        "license": "cc-by-4.0",
+        "license": license_id.strip(),
         "prereserve_doi": True,
     }
 
