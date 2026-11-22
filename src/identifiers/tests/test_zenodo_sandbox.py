@@ -35,20 +35,21 @@ class ZenodoSandboxTests(SimpleTestCase):
 
     def test_metadata_requires_title_creators_description(self):
         with self.assertRaises(ValueError):
-            journal_article_metadata(title="", creators=[{"name": "Doe, Jane"}], description="Abstract")
+            journal_article_metadata(title="", creators=[{"name": "Doe, Jane"}], description="Abstract", license_id="cc-by-4.0")
         with self.assertRaises(ValueError):
-            journal_article_metadata(title="Article", creators=[], description="Abstract")
+            journal_article_metadata(title="Article", creators=[], description="Abstract", license_id="cc-by-4.0")
         metadata = journal_article_metadata(
             title="Article", creators=[{"name": "Doe, Jane"}],
-            description="Abstract", publication_date="2026-11-22"
+            description="Abstract", license_id="cc-by-4.0", publication_date="2026-11-22"
         )
         self.assertTrue(metadata["prereserve_doi"])
+        self.assertEqual(metadata["license"], "cc-by-4.0")
         self.assertEqual(metadata["publication_type"], "article")
 
     def test_create_draft_reserves_doi_without_publishing(self):
         self.session.request.return_value = response(self.payload)
         draft = self.client.create_draft(journal_article_metadata(
-            title="Article", creators=[{"name": "Doe, Jane"}], description="Abstract"
+            title="Article", creators=[{"name": "Doe, Jane"}], description="Abstract", license_id="cc-by-4.0"
         ))
         self.assertEqual(draft.reserved_doi, "10.5072/zenodo.124")
         args, kwargs = self.session.request.call_args
