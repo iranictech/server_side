@@ -2065,9 +2065,16 @@ class Article(AbstractLastModifiedModel):
 
         self.save()
 
-        if self.journal.use_crossref:
+        from identifiers.zenodo_journal_policy import (
+            automatic_crossref_enabled,
+        )
+
+        if (
+            self.journal.use_crossref
+            and automatic_crossref_enabled(self.journal)
+        ):
             id = id_logic.generate_crossref_doi_with_pattern(self)
-            if self.journal.register_doi_at_acceptance:
+            if id and self.journal.register_doi_at_acceptance:
                 id.register()
 
     def decline_article(self):

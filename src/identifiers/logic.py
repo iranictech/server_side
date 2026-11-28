@@ -35,11 +35,89 @@ logger = get_logger(__name__)
 CROSSREF_TIMEOUT_SECONDS = 30
 
 
+def crossref_blocked_article_ids(article_ids):
+    """
+    Articles managed by the Zenodo DOI workflow.
+    Sandbox deposits never block Crossref.
+    """
+
+    from identifiers.models import Identifier
+    from identifiers.zenodo_models import ZenodoDeposit
+
+    article_ids = list(article_ids)
+
+    zenodo_owned = set(
+        Identifier.objects.filter(
+            article_id__in=article_ids,
+            id_type="doi",
+            doi_provider="zenodo",
+        ).values_list("article_id", flat=True)
+    )
+
+    zenodo_pending = set(
+        ZenodoDeposit.objects.filter(
+            article_id__in=article_ids,
+            is_sandbox=False,
+        ).exclude(
+            metadata_snapshot__has_key="doi",
+        ).values_list("article_id", flat=True)
+    )
+
+    return zenodo_owned | zenodo_pending
+
+
 def register_crossref_doi(identifier):
-    return register_batch_of_crossref_dois([identifier.article])
+
+    if crossref_blocked_article_ids(
+        [identifier.article_id]
+    ):
+        return (
+            "DOI is managed by Zenodo, not Crossref.",
+            True,
+        )
+
+    return register_batch_of_crossref_dois(
+        [identifier.article]
+    )
 
 
 def register_batch_of_crossref_dois(articles, **kwargs):
+    from identifiers.models import Identifier
+    from identifiers.zenodo_models import ZenodoDeposit
+
+    articles = list(articles)
+
+    if not articles:
+        return "No articles supplied", True
+
+    article_ids = [article.pk for article in articles]
+
+    zenodo_owned = set(
+        Identifier.objects.filter(
+            article_id__in=article_ids,
+            id_type="doi",
+            doi_provider="zenodo",
+        ).values_list("article_id", flat=True)
+    )
+
+    pending_zenodo = set(
+        ZenodoDeposit.objects.filter(
+            article_id__in=article_ids,
+            is_sandbox=False,
+        ).exclude(
+            metadata_snapshot__has_key="doi",
+        ).values_list("article_id", flat=True)
+    )
+
+    blocked = zenodo_owned | pending_zenodo
+
+    if blocked:
+        return (
+            "Crossref registration blocked: "
+            "one or more articles belong to the Zenodo workflow.",
+            True,
+        )
+
     journals = set([article.journal for article in articles])
     if len(journals) > 1:
         status = "Articles must all be from the same journal"
@@ -130,8 +208,21 @@ def get_poll_settings(journal):
 
 
 def get_dois_for_articles(articles, create=False):
+    articles = list(articles)
+
+    blocked = (
+        crossref_blocked_article_ids(
+            [article.pk for article in articles]
+        )
+        if create else set()
+    )
+
     identifiers = []
+
     for article in articles:
+        if article.pk in blocked:
+            continue
+
         try:
             identifier = article.get_identifier("doi", object=True)
             if not identifier and create:
@@ -152,6 +243,16 @@ def poll_dois_for_articles(articles, **kwargs):
     status = ""
     error = False
     identifiers = get_dois_for_articles(articles)
+
+    blocked = crossref_blocked_article_ids(
+        [item.article_id for item in identifiers]
+    )
+
+    identifiers = [
+        item for item in identifiers
+        if item.article_id not in blocked
+    ]
+
     polled = set()
     for i, identifier in enumerate(identifiers):
         # Time out gracefully
@@ -186,6 +287,9 @@ def poll_dois_for_articles(articles, **kwargs):
 
 
 def register_crossref_component(article, xml, supp_file):
+    if crossref_blocked_article_ids([article.pk]):
+        return
+
     use_crossref = setting_handler.get_setting(
         "Identifiers", "use_crossref", article.journal
     ).processed_value
@@ -464,6 +568,17 @@ def send_crossref_deposit(test_mode, identifiers, journal=None):
     # Form a set from the iterable passed in
     identifiers = set((i for i in identifiers))
 
+    if not identifiers:
+        return "No identifiers supplied", True
+
+    if crossref_blocked_article_ids(
+        [item.article_id for item in identifiers]
+    ):
+        return (
+            "Crossref deposit blocked: Zenodo DOI workflow.",
+            True,
+        )
+
     # Get the journal
     # It assumes all the identifiers are for the same journal
     if not journal:
@@ -589,10 +704,46 @@ def create_crossref_doi_identifier(article, doi_suffix=None, suffix_is_whole_doi
 
 def generate_crossref_doi_with_pattern(article):
     """
-    Creates a crossref doi utilising a preset pattern.
-    :param article: article objects
-    :return: returns a DOI
+    Generate a Crossref DOI without conflicting with Zenodo.
     """
+    from django.db import transaction
+
+    with transaction.atomic():
+        # Lock the database row without replacing the
+        # caller's Article instance.
+        submission_models.Article.objects.select_for_update().get(
+            pk=article.pk
+        )
+
+        if crossref_blocked_article_ids([article.pk]):
+            return None
+
+        existing = list(
+            models.Identifier.objects.filter(
+                article=article,
+                id_type="doi",
+            ).order_by("pk")[:2]
+        )
+
+        if len(existing) > 1:
+            raise ValueError(
+                "Multiple DOI identifiers require manual review"
+            )
+
+        if existing:
+            return existing[0]
+
+        from identifiers.zenodo_journal_policy import (
+            automatic_crossref_enabled,
+        )
+
+        if not automatic_crossref_enabled(article.journal):
+            return None
+
+        return _generate_crossref_doi_with_pattern(article)
+
+
+def _generate_crossref_doi_with_pattern(article):
 
     doi_prefix = setting_handler.get_setting(
         "Identifiers", "crossref_prefix", article.journal
@@ -605,6 +756,7 @@ def generate_crossref_doi_with_pattern(article):
         "id_type": "doi",
         "identifier": "{0}/{1}".format(doi_prefix, doi_suffix),
         "article": article,
+        "doi_provider": models.Identifier.DOIProvider.CROSSREF,
     }
 
     return models.Identifier.objects.create(**doi_options)

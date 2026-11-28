@@ -5,8 +5,25 @@ __maintainer__ = "Birkbeck Centre for Technology and Publishing"
 from django.urls import re_path
 
 from identifiers import views
+from identifiers import zenodo_ui
+
+from identifiers import zenodo_production_ui
 
 urlpatterns = [
+    re_path(
+        r"^(?P<article_id>\d+)/zenodo/production/"
+        r"(?P<action>prepare|create|upload|check|reconcile|publish|reconcile_publish)/$",
+        zenodo_production_ui.zenodo_production_action,
+        name="zenodo_production_action",
+    ),
+
+    re_path(
+        r"^(?P<article_id>\d+)/zenodo/"
+        r"(?P<action>prepare|create|upload|check|reconcile)/$",
+        zenodo_ui.zenodo_action,
+        name="zenodo_article_action",
+    ),
+
     re_path(r"^pingback$", views.pingback, name="crossref_pingback"),
     re_path(
         r"^(?P<article_id>\d+)/$", views.article_identifiers, name="article_identifiers"

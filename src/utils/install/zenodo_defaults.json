@@ -1,0 +1,56 @@
+[
+    {
+        "group": {
+            "name": "Identifiers"
+        },
+        "setting": {
+            "name": "use_zenodo",
+            "pretty_name": "Enable Zenodo DOI Registration",
+            "description": "Enable Zenodo integration for this journal.",
+            "type": "boolean",
+            "is_translatable": false
+        },
+        "value": {
+            "default": "off"
+        },
+        "editable_by": [
+            "journal-manager"
+        ]
+    },
+    {
+        "group": {
+            "name": "Identifiers"
+        },
+        "setting": {
+            "name": "doi_provider",
+            "pretty_name": "Default DOI Provider",
+            "description": "Allowed values: crossref, zenodo, manual. Manual disables automatic Crossref DOI generation.",
+            "type": "char",
+            "is_translatable": false
+        },
+        "value": {
+            "default": "crossref"
+        },
+        "editable_by": [
+            "journal-manager"
+        ]
+    },
+    {
+        "group": {
+            "name": "Identifiers"
+        },
+        "setting": {
+            "name": "zenodo_archive_existing_doi",
+            "pretty_name": "Allow Zenodo Archiving of Existing DOI",
+            "description": "Archive articles with an externally verified Crossref DOI.",
+            "type": "boolean",
+            "is_translatable": false
+        },
+        "value": {
+            "default": "off"
+        },
+        "editable_by": [
+            "journal-manager"
+        ]
+    }
+]

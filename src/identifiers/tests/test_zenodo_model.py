@@ -38,9 +38,9 @@ class ZenodoDepositModelTests(SimpleTestCase):
         )
         self.assertTrue(field.default)
 
-    def test_default_status_is_draft(self):
+    def test_default_status_is_ready(self):
         field = self.model._meta.get_field("status")
-        self.assertEqual(field.default, "draft")
+        self.assertEqual(field.default, "ready")
 
     def test_article_environment_unique_constraint(self):
         constraints = {

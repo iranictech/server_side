@@ -37,6 +37,12 @@ class Command(BaseCommand):
 
         for article in articles:
             print("Handling article {0}".format(article.pk))
+            if identifier_logic.crossref_blocked_article_ids(
+                [article.pk]
+            ):
+                print("Zenodo-managed DOI: skipped")
+                continue
+
             if article.is_published:
                 print("Article is published")
                 try:
@@ -48,7 +54,8 @@ class Command(BaseCommand):
                         identifier = (
                             identifier_logic.generate_crossref_doi_with_pattern(article)
                         )
-                        identifier.register()
+                        if identifier:
+                            identifier.register()
                 except AttributeError as e:
                     print("Error {0}".format(e))
 

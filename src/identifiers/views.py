@@ -60,10 +60,41 @@ def article_identifiers(request, article_id):
     )
     identifiers = models.Identifier.objects.filter(article=article)
 
+    from django.conf import settings
+    from identifiers.zenodo_models import ZenodoDeposit
+
+    zenodo_deposit = ZenodoDeposit.objects.filter(
+        article=article,
+        is_sandbox=True,
+    ).first()
+
+    zenodo_ui_enabled = bool(
+        getattr(settings, "ZENODO_SANDBOX_UI_ENABLED", False)
+    )
+    zenodo_can_operate = (
+        zenodo_ui_enabled
+        and request.user.is_authenticated
+        and request.user.is_superuser
+    )
+
+
+    from identifiers.zenodo_production_ui import (
+        production_panel_context,
+    )
+
     template = "identifiers/article_identifiers.html"
     context = {
         "article": article,
         "identifiers": identifiers,
+        "zenodo_deposit": zenodo_deposit,
+        **production_panel_context(request, article),
+        "zenodo_can_operate": zenodo_can_operate,
+        "zenodo_sandbox_panel_visible": getattr(
+            settings,
+            "ZENODO_SANDBOX_PANEL_VISIBLE",
+            True,
+        ),
+
     }
 
     return render(request, template, context)
@@ -106,18 +137,70 @@ def manage_identifier(request, article_id, identifier_id=None):
         )
 
         if form.is_valid():
-            form.save()
-            messages.add_message(
-                request,
-                messages.SUCCESS,
-                "Identifier saved.",
-            )
-            return redirect(
-                reverse(
-                    "article_identifiers",
-                    kwargs={"article_id": article.pk},
+
+            from django.db import transaction
+            from identifiers.zenodo_models import ZenodoDeposit
+
+            with transaction.atomic():
+
+                submission_models.Article.objects.select_for_update().get(
+                    pk=article.pk
                 )
-            )
+
+                original = (
+                    models.Identifier.objects.filter(
+                        pk=identifier_id,
+                        article=article,
+                    ).first()
+                    if identifier_id
+                    else None
+                )
+
+                is_doi = (
+                    form.cleaned_data.get("id_type") == "doi"
+                    or (original and original.id_type == "doi")
+                )
+
+                if is_doi:
+
+                    if original and original.doi_provider == "zenodo":
+                        form.add_error(
+                            None,
+                            "Published Zenodo DOI cannot be edited manually.",
+                        )
+
+                    elif ZenodoDeposit.objects.filter(
+                        article=article,
+                        is_sandbox=False,
+                    ).exists():
+                        form.add_error(
+                            None,
+                            "DOI is managed by an existing Zenodo deposit.",
+                        )
+
+                    elif models.Identifier.objects.filter(
+                        article=article,
+                        id_type="doi",
+                    ).exclude(pk=identifier_id).exists():
+                        form.add_error(
+                            None,
+                            "This article already has a DOI.",
+                        )
+
+                if not form.errors:
+                    form.save()
+            if not form.errors:
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    "Identifier saved.",
+                )
+                return redirect(
+                    reverse(
+                        "article_identifiers",
+                        kwargs={"article_id": article.pk},
+                    )
+                )
 
     template = "identifiers/manage_identifier.html"
     context = {
@@ -296,6 +379,7 @@ def issue_doi(request, article_id, identifier_id):
 
 @require_POST
 @production_user_or_editor_required
+@__import__('django.db', fromlist=['transaction']).transaction.atomic
 def delete_identifier(request, article_id, identifier_id):
     """
     Deletes an identifier
@@ -314,6 +398,33 @@ def delete_identifier(request, article_id, identifier_id):
         pk=identifier_id,
         article=article,
     )
+
+    from identifiers.zenodo_models import ZenodoDeposit
+
+    submission_models.Article.objects.select_for_update().get(
+        pk=article.pk
+    )
+
+    identifier.refresh_from_db()
+
+    if identifier.id_type == "doi" and (
+        identifier.doi_provider == "zenodo"
+        or ZenodoDeposit.objects.filter(
+            article=article,
+            is_sandbox=False,
+        ).exists()
+    ):
+        messages.error(
+            request,
+            "DOI associated with Zenodo cannot be deleted manually.",
+        )
+        return redirect(
+            reverse(
+                "article_identifiers",
+                kwargs={"article_id": article.pk},
+            )
+        )
+
 
     identifier.delete()
     messages.add_message(request, messages.SUCCESS, "Identifier deleted.")

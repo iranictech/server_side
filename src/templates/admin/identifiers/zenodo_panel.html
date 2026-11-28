@@ -1,0 +1,106 @@
+<div class="large-12 columns box">
+    <div class="title-area">
+        <h2>Zenodo DOI — Sandbox</h2>
+    </div>
+
+    {% if not zenodo_can_operate %}
+        <p>
+            Zenodo operations are currently disabled or
+            unavailable for your account.
+        </p>
+    {% endif %}
+
+    {% if zenodo_deposit %}
+        <table class="small scroll">
+            <tbody>
+                <tr>
+                    <th>Status</th>
+                    <td>{{ zenodo_deposit.get_status_display }}</td>
+                </tr>
+                <tr>
+                    <th>Remote Deposit ID</th>
+                    <td>{{ zenodo_deposit.deposition_id|default:"Not created" }}</td>
+                </tr>
+                <tr>
+                    <th>Reserved DOI</th>
+                    <td>{{ zenodo_deposit.reserved_doi|default:"Not reserved" }}</td>
+                </tr>
+                <tr>
+                    <th>Published DOI</th>
+                    <td>{{ zenodo_deposit.published_doi|default:"Not published" }}</td>
+                </tr>
+                <tr>
+                    <th>PDF Filename</th>
+                    <td>{{ zenodo_deposit.upload_filename|default:"Not uploaded" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p>No Zenodo Sandbox deposit exists for this article.</p>
+    {% endif %}
+
+    {% if zenodo_can_operate %}
+
+        {% if not zenodo_deposit %}
+            <form method="post"
+                  action="{% url 'zenodo_article_action' article.pk 'prepare' %}">
+                {% csrf_token %}
+                <button type="submit" class="button">
+                    Prepare Sandbox Deposit
+                </button>
+            </form>
+        {% endif %}
+
+        {% if zenodo_deposit.status == "ready" %}
+            <form method="post"
+                  action="{% url 'zenodo_article_action' article.pk 'create' %}">
+                {% csrf_token %}
+                <button type="submit" class="button">
+                    Create Remote Draft
+                </button>
+            </form>
+        {% endif %}
+
+        {% if zenodo_deposit.status == "draft" %}
+            <form method="post"
+                  action="{% url 'zenodo_article_action' article.pk 'upload' %}">
+                {% csrf_token %}
+                <button type="submit" class="button">
+                    Upload Article PDF
+                </button>
+            </form>
+        {% endif %}
+
+        {% if zenodo_deposit.deposition_id %}
+            <form method="post"
+                  action="{% url 'zenodo_article_action' article.pk 'check' %}">
+                {% csrf_token %}
+                <button type="submit" class="secondary button">
+                    Check Remote Status
+                </button>
+            </form>
+        {% endif %}
+
+        {% if zenodo_deposit.status == "unknown" %}
+            <form method="post"
+                  action="{% url 'zenodo_article_action' article.pk 'reconcile' %}">
+                {% csrf_token %}
+                <label>
+                    <input type="checkbox" name="confirm"
+                           value="yes" required>
+                    I confirm that this Sandbox reconciliation
+                    has been reviewed.
+                </label>
+                <button type="submit" class="warning button">
+                    Verify and Reconcile
+                </button>
+            </form>
+        {% endif %}
+
+    {% endif %}
+
+    <p>
+        Sandbox only. DOI publication is not available
+        from this interface.
+    </p>
+</div>

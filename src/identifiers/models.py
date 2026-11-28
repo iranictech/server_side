@@ -256,6 +256,18 @@ class CrossrefStatus(models.Model):
 
 
 class Identifier(models.Model):
+
+    class DOIProvider(models.TextChoices):
+        CROSSREF = "crossref", "Crossref"
+        ZENODO = "zenodo", "Zenodo"
+
+    doi_provider = models.CharField(
+        max_length=20,
+        choices=DOIProvider.choices,
+        blank=True,
+        default="",
+    )
+
     id_type = models.CharField(max_length=300, choices=identifier_choices)
     identifier = models.CharField(max_length=300)
     enabled = models.BooleanField(default=True)

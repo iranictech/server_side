@@ -28,8 +28,23 @@ class Command(BaseCommand):
 
         identifier = article.get_identifier("doi", object=True)
 
-        if identifier.is_doi:
-            identifier.register()
+        if identifier_logic.crossref_blocked_article_ids(
+            [article.pk]
+        ):
+            self.stdout.write(
+                "Article DOI is managed by Zenodo. Skipped."
+            )
+            return
+
+        if not identifier:
+            identifier = (
+                identifier_logic.generate_crossref_doi_with_pattern(
+                    article
+                )
+            )
+
+        if identifier and identifier.is_doi:
+            status, error = identifier.register()
+            self.stdout.write(str(status))
         else:
-            identifier = identifier_logic.generate_crossref_doi_with_pattern(article)
-            identifier.register()
+            self.stdout.write("No eligible Crossref DOI.")

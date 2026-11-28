@@ -5,7 +5,10 @@ from django.db.models import Q
 class ZenodoDeposit(models.Model):
 
     class Status(models.TextChoices):
+        READY = "ready", "Ready"
+        CREATING = "creating", "Creating"
         DRAFT = "draft", "Draft"
+        UPLOADING = "uploading", "Uploading"
         UPLOADED = "uploaded", "Uploaded"
         PUBLISHED = "published", "Published"
         FAILED = "failed", "Failed"
@@ -37,7 +40,7 @@ class ZenodoDeposit(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.DRAFT,
+        default=Status.READY,
     )
 
     record_url = models.URLField(
@@ -52,6 +55,23 @@ class ZenodoDeposit(models.Model):
 
     last_error = models.TextField(
         blank=True,
+    )
+
+    upload_filename = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
+
+    upload_size = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    upload_checksum = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

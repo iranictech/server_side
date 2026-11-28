@@ -107,6 +107,53 @@ class ZenodoSandboxTests(SimpleTestCase):
         doi, _ = self.client.publish(draft, confirmed=True)
         self.assertEqual(doi, "10.5072/zenodo.124")
 
+
+    def test_get_deposition_success(self):
+        self.session.request.return_value = response(self.payload)
+
+        result = self.client.get_deposition(124)
+
+        self.assertEqual(result["id"], 124)
+        args, kwargs = self.session.request.call_args
+
+        self.assertEqual(
+            args[:2],
+            ("GET", DEPOSITIONS_URL + "/124"),
+        )
+        self.assertFalse(kwargs["allow_redirects"])
+
+    def test_get_deposition_rejects_mismatched_id(self):
+        self.session.request.return_value = response(self.payload)
+
+        with self.assertRaises(ZenodoError):
+            self.client.get_deposition(999)
+
+    def test_get_deposition_rejects_invalid_id(self):
+        for value in (0, -1, None, "124", True):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    self.client.get_deposition(value)
+
+        self.session.request.assert_not_called()
+
+    def test_list_depositions(self):
+        self.session.request.return_value = response(
+            [self.payload]
+        )
+
+        results = self.client.list_depositions()
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], 124)
+
+        args, kwargs = self.session.request.call_args
+
+        self.assertEqual(
+            args[:2],
+            ("GET", DEPOSITIONS_URL),
+        )
+        self.assertFalse(kwargs["allow_redirects"])
+
     @patch.dict("os.environ", {}, clear=True)
     def test_missing_token_fails_closed(self):
         with self.assertRaises(ZenodoError):

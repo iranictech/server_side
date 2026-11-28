@@ -141,6 +141,33 @@ class ZenodoSandboxClient:
         bucket = _sandbox_url(draft.bucket_url).rstrip("/")
         return self._request("PUT", bucket + "/" + quote(name, safe=""), data=fileobj)
 
+
+    def get_deposition(self, deposition_id):
+        """Read a remote sandbox deposition."""
+        if type(deposition_id) is not int or deposition_id <= 0:
+            raise ValueError("A positive deposition ID is required")
+
+        obj = self._request(
+            "GET",
+            DEPOSITIONS_URL + "/" + str(deposition_id),
+        )
+        if (
+            not isinstance(obj, dict)
+            or obj.get("id") != deposition_id
+        ):
+            raise ZenodoError("Unexpected deposition response")
+
+        return obj
+
+    def list_depositions(self):
+        """Read the first page of sandbox depositions."""
+        obj = self._request("GET", DEPOSITIONS_URL)
+
+        if not isinstance(obj, list):
+            raise ZenodoError("Unexpected deposition list response")
+
+        return obj
+
     def publish(self, draft, *, confirmed=False):
         """Irreversible action: explicit confirmation required even in sandbox."""
         if not confirmed:

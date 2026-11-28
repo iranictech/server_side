@@ -1,0 +1,325 @@
+{% if zenodo_production_visible %}
+
+<div class="large-12 columns box">
+
+    <div class="title-area">
+        <h2>Zenodo DOI — Production</h2>
+    </div>
+
+    {% if not zenodo_production_can_operate %}
+        <p>
+            Production operations are currently disabled.
+        </p>
+    {% endif %}
+
+    <table class="small scroll">
+        <tbody>
+
+            <tr>
+                <th>Environment</th>
+                <td>Production</td>
+            </tr>
+
+            <tr>
+                <th>Status</th>
+                <td>
+                    {% if zenodo_production_deposit.status == "published" %}
+                        <span class="label success">
+                            <i class="fa fa-check"></i>
+                            Published
+                        </span>
+                    {% else %}
+                        {{ zenodo_production_deposit.get_status_display|default:"Not prepared" }}
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>DOI Mode</th>
+                <td>
+                    {% if zenodo_production_deposit %}
+                        {% if zenodo_production_deposit.metadata_snapshot.doi %}
+                            Existing DOI
+                        {% else %}
+                            Reserve new DOI
+                        {% endif %}
+                    {% elif zenodo_production_eligibility.mode == "existing_doi" %}
+                        Existing Crossref DOI
+                    {% elif zenodo_production_eligibility.mode == "reserve_new" %}
+                        Reserve new DOI
+                    {% else %}
+                        Not eligible
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Existing DOI</th>
+                <td>
+                    {% if zenodo_production_deposit %}
+                        {{ zenodo_production_deposit.metadata_snapshot.doi|default:"None" }}
+                    {% else %}
+                        {{ zenodo_production_eligibility.doi|default:"None" }}
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Remote Deposit ID</th>
+                <td>
+                    {{ zenodo_production_deposit.deposition_id|default:"Not created" }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Draft DOI</th>
+                <td>
+                    {{ zenodo_production_deposit.reserved_doi|default:"Not assigned" }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Published DOI</th>
+                <td>
+                    {% if zenodo_production_deposit.published_doi %}
+                        <a href="https://doi.org/{{ zenodo_production_deposit.published_doi }}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            {{ zenodo_production_deposit.published_doi }}
+                        </a>
+                    {% else %}
+                        Not published
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>PDF Filename</th>
+                <td>
+                    {{ zenodo_production_deposit.upload_filename|default:"Not uploaded" }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Eligibility</th>
+                <td>
+                    {% if zenodo_production_deposit.status == "published" %}
+                        <span class="label success">
+                            Publication verified
+                        </span>
+                    {% else %}
+                        {{ zenodo_production_eligibility.reason }}
+                    {% endif %}
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    {% if zenodo_production_can_operate %}
+
+        {% if not zenodo_production_deposit and zenodo_production_eligibility.eligible %}
+
+            <form method="post"
+                  action="{% url 'zenodo_production_action' article.pk 'prepare' %}">
+
+                {% csrf_token %}
+
+                <label>
+                    <input type="checkbox"
+                           name="confirm"
+                           value="yes"
+                           required>
+                    I confirm Production preparation.
+                </label>
+
+                <button type="submit" class="button">
+                    Prepare Production Deposit
+                </button>
+
+            </form>
+
+        {% endif %}
+
+        {% if zenodo_production_deposit.status == "ready" %}
+
+            <form method="post"
+                  action="{% url 'zenodo_production_action' article.pk 'create' %}">
+
+                {% csrf_token %}
+
+                <label>
+                    <input type="checkbox"
+                           name="confirm"
+                           value="yes"
+                           required>
+                    I approve creating a real Zenodo draft.
+                </label>
+
+                <button type="submit" class="button">
+                    Create Production Draft
+                </button>
+
+            </form>
+
+        {% endif %}
+
+        {% if zenodo_production_deposit.status == "draft" %}
+
+            <form method="post"
+                  action="{% url 'zenodo_production_action' article.pk 'upload' %}">
+
+                {% csrf_token %}
+
+                <label>
+                    <input type="checkbox"
+                           name="confirm"
+                           value="yes"
+                           required>
+                    I approve transferring the article PDF.
+                </label>
+
+                <button type="submit" class="button">
+                    Upload Article PDF
+                </button>
+
+            </form>
+
+        {% endif %}
+
+        {% if zenodo_production_deposit.deposition_id %}
+
+            <form method="post"
+                  action="{% url 'zenodo_production_action' article.pk 'check' %}">
+
+                {% csrf_token %}
+
+                <button type="submit" class="secondary button">
+                    Check Remote Status
+                </button>
+
+            </form>
+
+        {% endif %}
+
+        {% if zenodo_production_deposit.status == "unknown" and zenodo_production_deposit.upload_checksum and not zenodo_publication_pending %}
+
+            <form method="post"
+                  action="{% url 'zenodo_production_action' article.pk 'reconcile' %}">
+
+                {% csrf_token %}
+
+                <label>
+                    <input type="checkbox"
+                           name="confirm"
+                           value="yes"
+                           required>
+                    I have reviewed this reconciliation.
+                </label>
+
+                <button type="submit" class="warning button">
+                    Verify and Reconcile
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    {% endif %}
+
+    {% if zenodo_production_deposit.status == "published" %}
+
+        <p class="success">
+            <i class="fa fa-check"></i>
+            Publication verified. DOI synchronized with Janeway.
+        </p>
+
+        <a class="button secondary"
+           href="https://zenodo.org/records/{{ zenodo_production_deposit.deposition_id }}"
+           target="_blank"
+           rel="noopener noreferrer">
+            View Zenodo Record
+            <i class="fa fa-external-link"></i>
+        </a>
+
+    {% elif zenodo_production_publish_enabled %}
+
+        <p>Production environment. Explicit confirmation is required for publication.</p>
+
+    {% else %}
+
+        <p>Production environment. Publication is disabled.</p>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+{% if zenodo_production_visible and zenodo_production_can_operate and zenodo_production_deposit.status != "published" %}
+
+<div class="large-12 columns box">
+    <div class="title-area">
+        <h2>Zenodo Publication</h2>
+    </div>
+
+    {% if zenodo_publication_pending %}
+
+    <p>
+        Publication verification is pending.
+        Do not submit another publication request.
+    </p>
+
+    <form method="post"
+          action="{% url 'zenodo_production_action' article.pk 'reconcile_publish' %}">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" value="yes">
+        <button type="submit" class="button warning">
+            Verify and Reconcile Publication
+        </button>
+    </form>
+
+    {% elif zenodo_production_deposit.status == "uploaded" %}
+
+        {% if zenodo_production_publish_enabled %}
+
+        <form method="post"
+              action="{% url 'zenodo_production_action' article.pk 'publish' %}"
+              onsubmit="return confirm('Publish permanently to Zenodo Production?');">
+            {% csrf_token %}
+            <label>
+                <input type="checkbox"
+                       name="confirm"
+                       value="yes"
+                       required>
+                I confirm permanent publication in Zenodo.
+            </label>
+
+            <button type="submit" class="button success">
+                Publish to Zenodo
+            </button>
+        </form>
+
+        {% else %}
+            <p>Production publication is disabled.</p>
+        {% endif %}
+
+    {% elif zenodo_production_deposit.status == "published" %}
+
+        <p>Publication verified.</p>
+
+        <p>
+            DOI:
+            <a href="https://doi.org/{{ zenodo_production_deposit.published_doi }}">
+                {{ zenodo_production_deposit.published_doi }}
+            </a>
+        </p>
+
+    {% else %}
+
+        <p>Prepare and verify the PDF before publication.</p>
+
+    {% endif %}
+</div>
+
+{% endif %}
