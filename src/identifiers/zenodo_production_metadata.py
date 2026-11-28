@@ -34,6 +34,7 @@ from identifiers.zenodo_journal_policy import (
     zenodo_enabled,
     default_doi_provider,
     zenodo_archive_enabled,
+    zenodo_new_doi_enabled,
 )
 
 
@@ -106,6 +107,11 @@ def check_production_eligibility(
         return reject("Zenodo is disabled for this journal")
 
     if not identifiers:
+        if not zenodo_new_doi_enabled(article.journal):
+            return reject(
+                "New Zenodo DOI registration is disabled for this journal"
+            )
+
         if default_doi_provider(article.journal) not in (
             "zenodo", "manual"
         ):

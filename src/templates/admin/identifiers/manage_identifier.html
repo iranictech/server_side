@@ -23,7 +23,7 @@
         <a class="button" href="{% url 'article_identifiers' article.pk %}"><i class="fa fa-arrow-left">&nbsp;</i>Back</a>
     </div>
     <p>Dois should be entered on their ID format, not their URL format<p>
-    <p>Example DOI based on pattern for this article: {{ article.render_sample_doi }}</p>
+    <p>DOI identifiers are managed according to the journal's DOI provider settings.</p>
     <form method="POST">
         {% csrf_token %}
         {% include "elements/forms/errors.html" %}

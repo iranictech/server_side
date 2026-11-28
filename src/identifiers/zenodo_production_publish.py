@@ -6,6 +6,9 @@ No automatic publication retries.
 
 from django.conf import settings
 from django.db import transaction
+from identifiers.zenodo_journal_policy import (
+    zenodo_publication_enabled,
+)
 
 from identifiers.models import Identifier
 from identifiers.zenodo_models import ZenodoDeposit
@@ -195,6 +198,11 @@ def publish_production_deposit(
     ):
         raise ProductionWorkflowError(
             "Publication is disabled"
+        )
+
+    if not zenodo_publication_enabled(deposit.article.journal):
+        raise ProductionWorkflowError(
+            "Zenodo publication is disabled for this journal"
         )
 
     if deposit.status != ZenodoDeposit.Status.UPLOADED:

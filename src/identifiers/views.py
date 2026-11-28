@@ -82,10 +82,21 @@ def article_identifiers(request, article_id):
         production_panel_context,
     )
 
+    doi_managed_by_zenodo = ZenodoDeposit.objects.filter(
+        article=article,
+        is_sandbox=False,
+    ).exists()
+
+    article_has_doi = identifiers.filter(
+        id_type="doi",
+    ).exists()
+
     template = "identifiers/article_identifiers.html"
     context = {
         "article": article,
         "identifiers": identifiers,
+        "doi_managed_by_zenodo": doi_managed_by_zenodo,
+        "article_has_doi": article_has_doi,
         "zenodo_deposit": zenodo_deposit,
         **production_panel_context(request, article),
         "zenodo_can_operate": zenodo_can_operate,
@@ -235,6 +246,19 @@ def show_doi(request, article_id, identifier_id):
         id_type="doi",
     )
 
+    if logic.crossref_blocked_article_ids([article.pk]):
+        messages.warning(
+            request,
+            "This DOI is managed by Zenodo. "
+            "Crossref operations are unavailable.",
+        )
+        return redirect(
+            reverse(
+                "article_identifiers",
+                kwargs={"article_id": article.pk},
+            )
+        )
+
     try:
         document = identifier.crossrefstatus.latest_deposit.document
         if not document:
@@ -270,6 +294,19 @@ def poll_doi(request, article_id, identifier_id):
         article=article,
         id_type="doi",
     )
+
+    if logic.crossref_blocked_article_ids([article.pk]):
+        messages.warning(
+            request,
+            "This DOI is managed by Zenodo. "
+            "Crossref operations are unavailable.",
+        )
+        return redirect(
+            reverse(
+                "article_identifiers",
+                kwargs={"article_id": article.pk},
+            )
+        )
 
     # Scenario 1: The identifier has not been polled or deposited before.
     # It needs a CrossrefStatus object created.
@@ -323,6 +360,19 @@ def poll_doi_output(request, article_id, identifier_id):
         id_type="doi",
     )
 
+    if logic.crossref_blocked_article_ids([article.pk]):
+        messages.warning(
+            request,
+            "This DOI is managed by Zenodo. "
+            "Crossref operations are unavailable.",
+        )
+        return redirect(
+            reverse(
+                "article_identifiers",
+                kwargs={"article_id": article.pk},
+            )
+        )
+
     if not identifier.crossrefstatus:
         return HttpResponse("Error: no deposit found")
     elif "doi_batch" not in identifier.crossrefstatus.latest_deposit.result_text:
@@ -363,6 +413,19 @@ def issue_doi(request, article_id, identifier_id):
         article=article,
         id_type="doi",
     )
+
+    if logic.crossref_blocked_article_ids([article.pk]):
+        messages.warning(
+            request,
+            "This DOI is managed by Zenodo. "
+            "Crossref operations are unavailable.",
+        )
+        return redirect(
+            reverse(
+                "article_identifiers",
+                kwargs={"article_id": article.pk},
+            )
+        )
 
     status, error = identifier.register()
     messages.add_message(

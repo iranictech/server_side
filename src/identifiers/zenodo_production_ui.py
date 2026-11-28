@@ -7,6 +7,9 @@ Publication is disabled.
 """
 
 from django.conf import settings
+from identifiers.zenodo_journal_policy import (
+    zenodo_publication_enabled,
+)
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
@@ -93,10 +96,13 @@ def production_panel_context(request, article):
 
     return {
         "zenodo_production_visible": True,
-        "zenodo_production_publish_enabled": getattr(
-            settings,
-            "ZENODO_PRODUCTION_PUBLISH_ENABLED",
-            False,
+        "zenodo_production_publish_enabled": (
+            getattr(
+                settings,
+                "ZENODO_PRODUCTION_PUBLISH_ENABLED",
+                False,
+            )
+            and zenodo_publication_enabled(article.journal)
         ),
         "zenodo_publication_pending": bool(
             deposit and deposit.last_error == PUBLISH_PENDING

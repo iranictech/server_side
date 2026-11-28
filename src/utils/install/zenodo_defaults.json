@@ -52,5 +52,41 @@
         "editable_by": [
             "journal-manager"
         ]
+    },
+    {
+        "group": {
+            "name": "Identifiers"
+        },
+        "setting": {
+            "name": "zenodo_allow_new_doi",
+            "pretty_name": "Allow New Zenodo DOI Registration",
+            "description": "Allow new Zenodo DOI reservations for this journal.",
+            "type": "boolean",
+            "is_translatable": false
+        },
+        "value": {
+            "default": "off"
+        },
+        "editable_by": [
+            "journal-manager"
+        ]
+    },
+    {
+        "group": {
+            "name": "Identifiers"
+        },
+        "setting": {
+            "name": "zenodo_allow_publication",
+            "pretty_name": "Allow Zenodo Production Publication",
+            "description": "Allow confirmed publication subject to server authorization.",
+            "type": "boolean",
+            "is_translatable": false
+        },
+        "value": {
+            "default": "off"
+        },
+        "editable_by": [
+            "journal-manager"
+        ]
     }
 ]

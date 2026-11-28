@@ -20,6 +20,14 @@
         <h2>Edit Identifiers</h2>
         <a href="{% url 'add_new_identifier' article.pk %}" class="button">Add Identifier</a>
     </div>
+    {% if article_has_doi or doi_managed_by_zenodo %}
+        <div class="callout secondary">
+            <i class="fa fa-info-circle"></i>
+            This article already has a DOI or an existing DOI deposit.
+            Another DOI cannot be added manually.
+            Other identifier types remain available.
+        </div>
+    {% endif %}
     <table class="small scroll">
         <tr>
             <th>Type</th>
@@ -64,10 +72,20 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if ident.id_type == "doi" and doi_managed_by_zenodo or ident.id_type == "doi" and ident.doi_provider == "zenodo" %}
+                        <button type="button"
+                                class="small secondary button"
+                                disabled
+                                title="DOI managed by Zenodo">
+                            <i class="fa fa-lock"></i>
+                            Protected
+                        </button>
+                    {% else %}
                     <a href="{% url 'edit_identifier' article.pk ident.pk %}" class="small button">
                         <i class="fa fa-edit">&nbsp;</i>
                         Edit
                     </a>
+                    {% endif %}
                 </td>
                 <td>
                     {% if ident.enabled %}
@@ -123,10 +141,20 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if ident.id_type == "doi" and doi_managed_by_zenodo or ident.id_type == "doi" and ident.doi_provider == "zenodo" %}
+                        <button type="button"
+                                class="small secondary button"
+                                disabled
+                                title="Registered DOI cannot be deleted manually">
+                            <i class="fa fa-ban"></i>
+                            Protected
+                        </button>
+                    {% else %}
                     <button class="small button warning" name="delete" formaction="{% url 'delete_identifier' article.pk ident.pk %}">
                         <i class="fa fa-trash">&nbsp;</i>
                         Delete
                     </button>
+                    {% endif %}
                 </td>
             </form>
         </tr>

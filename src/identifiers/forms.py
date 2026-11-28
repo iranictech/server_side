@@ -18,6 +18,26 @@ class IdentifierForm(forms.ModelForm):
         self.article = kwargs.pop("article")
         super(IdentifierForm, self).__init__(*args, **kwargs)
 
+        from identifiers.zenodo_models import ZenodoDeposit
+
+        has_doi = models.Identifier.objects.filter(
+            article=self.article,
+            id_type="doi",
+        ).exists()
+
+        has_deposit = ZenodoDeposit.objects.filter(
+            article=self.article,
+            is_sandbox=False,
+        ).exists()
+
+        if not self.instance.pk or self.instance.id_type != "doi":
+            if has_doi or has_deposit:
+                self.fields["id_type"].choices = [
+                    (value, label)
+                    for value, label in self.fields["id_type"].choices
+                    if value != "doi"
+                ]
+
     def clean(self):
         super().clean()
         cleaned_data = self.cleaned_data
@@ -30,6 +50,9 @@ class IdentifierForm(forms.ModelForm):
             pattern = models.DOI_RE
         else:
             pattern = models.PUB_ID_RE
+
+        if not id_type or not identifier:
+            return cleaned_data
 
         if not pattern.match(identifier):
             self.add_error(

@@ -41,3 +41,22 @@ def zenodo_archive_enabled(journal):
 
 def automatic_crossref_enabled(journal):
     return default_doi_provider(journal) == "crossref"
+
+
+def zenodo_new_doi_enabled(journal):
+    return (
+        zenodo_enabled(journal)
+        and get_doi_setting(
+            journal, "zenodo_allow_new_doi", False
+        ) is True
+        and default_doi_provider(journal) in ("zenodo", "manual")
+    )
+
+
+def zenodo_publication_enabled(journal):
+    return (
+        zenodo_enabled(journal)
+        and get_doi_setting(
+            journal, "zenodo_allow_publication", False
+        ) is True
+    )
