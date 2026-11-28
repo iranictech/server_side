@@ -1,0 +1,60 @@
+{% load gold_scholar %}
+{% gold_scholar_most_cited request.journal as most_cited_articles %}
+{# Existing Janeway Popular Articles element; original article_section DOM/classes. #}
+{% if popular_articles %}
+<section class="article_section" data-gold-home-element="popular" aria-labelledby="gold-articles-title">
+    <div class="article_section_header">
+        <div class="article_section_header_content">
+            <h1 id="gold-articles-title">Article</h1>
+            <p>Explore published articles and recent research in {{ request.journal.name }}.</p>
+        </div>
+        <a href="{% url 'journal_issues' %}" class="article_section_view_all_btn">View Archives
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.75 0.75L0.75 10.75M10.75 9.75V0.75H1.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#B18539" /></svg>
+        </a>
+    </div>
+    <div class="article_section_tabs" role="tablist" aria-label="Article ranking">
+        <button type="button" role="tab" aria-selected="true" aria-controls="most-read" id="most-read-tab" class="article_section_tab_btn article_section_active" onclick="openTab(event, 'most-read')">Most Read</button>
+        {# Most Cited is intentionally absent until a verified citation source is approved. #}
+            {# GOLD_CITED_OPTIONAL_V1: render only with verified citation ranking data #}
+
+        <button
+    type="button"
+    role="tab"
+    aria-selected="false"
+    aria-controls="most-cited"
+    id="most-cited-tab"
+    class="article_section_tab_btn"
+    onclick="openTab(event, 'most-cited')">Most Cited</button>
+    </div>
+    <div id="most-read" role="tabpanel" aria-labelledby="most-read-tab" class="article_section_tab_content article_section_active">
+        <div class="article_section_main_article" id="main-article-slot">
+            {% for article in popular_articles %}{% if forloop.first %}
+                {% include "journal/homepage_elements/_article_card.html" with article=article number=forloop.counter is_main=True metric_kind="views" only %}
+            {% endif %}{% endfor %}
+        </div>
+        <div class="article_section_side_articles" id="side-articles-list">
+            {% for article in popular_articles %}{% if not forloop.first %}
+                {% include "journal/homepage_elements/_article_card.html" with article=article number=forloop.counter is_main=False metric_kind="views" only %}
+            {% endif %}{% endfor %}
+        </div>
+    </div>
+
+    <div id="most-cited" role="tabpanel" aria-labelledby="most-cited-tab" class="article_section_tab_content">
+      <div class="article_section_main_article" id="main-article-slot-cited">
+        {% if not most_cited_articles %}
+        <p class="gold-cited-empty">
+            Citation data is not available yet.
+        </p>
+        {% endif %}
+        {% for article in most_cited_articles %}{% if forloop.first %}
+          {% include "journal/homepage_elements/_article_card.html" with article=article number=forloop.counter is_main=True metric_kind="citations" only %}
+        {% endif %}{% endfor %}
+      </div>
+      <div class="article_section_side_articles" id="side-articles-list-cited">
+        {% for article in most_cited_articles %}{% if not forloop.first %}
+          {% include "journal/homepage_elements/_article_card.html" with article=article number=forloop.counter is_main=False metric_kind="citations" only %}
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+    </section>
+{% endif %}
